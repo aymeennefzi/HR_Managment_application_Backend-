@@ -11,11 +11,9 @@ export class Rolecontroller{
      async createRole(@Body() createRoleDto: CreateRoleDto) {
         return this.roleService.createRole(createRoleDto);
      }
-     @Post(':userId/assign/:roleId')
-  async assignRoleToUser(
-    @Param('userId') userId: string,
-    @Param('roleId') roleId: string,
-  ): Promise<any> {
-    return this.roleService.assignRoleToUser(userId, roleId);
-  }
+     @Post('/assign-role')
+     async assignRoleToUser(@Body() body: { userId: string, roleName: string }): Promise<any> {
+     const { userId, roleName } = body;
+      return this.roleService.assignRoleToUser(userId, roleName);
+}
 }

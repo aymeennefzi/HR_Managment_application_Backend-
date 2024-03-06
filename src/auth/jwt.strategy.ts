@@ -6,6 +6,8 @@ import { User } from "./Shemas/User.shema";
 import { Model } from "mongoose";
 import { Request } from "express";
 import { Observable } from "rxjs";
+import { Request as RequestType } from 'express';
+
 
 @Injectable()
 export class jwtstrategy extends  PassportStrategy(Strategy) {
@@ -14,11 +16,15 @@ export class jwtstrategy extends  PassportStrategy(Strategy) {
         private UserModel :Model<User>
     ){
         super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: ExtractJwt.fromExtractors([
+                jwtstrategy.extractJWT
+                ,
+                ExtractJwt.fromAuthHeaderAsBearerToken()]),
             secretOrKey: process.env.JWT_SECRET
         })
         
     }
+    
 async validate(payload){
     const {id}=payload;
      let user=await this.UserModel.findById(id);
@@ -26,8 +32,21 @@ async validate(payload){
        return user ;
 
 }
+private static extractJWT(req: RequestType): string | null {
+    if (
+      req.cookies &&
+      'user_token' in req.cookies &&
+      req.cookies.user_token.length > 0
+    ) {
+      return req.cookies.user_token;
+    }
+    return null;
+  }
+
+
 
 }
+
 // @Injectable()
 // export class AuthenticatedGuard implements CanActivate {
 //   canActivate(

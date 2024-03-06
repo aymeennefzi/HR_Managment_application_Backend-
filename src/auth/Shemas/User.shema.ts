@@ -12,10 +12,12 @@ import { Role } from './Roles.Shema';
     email: string;
     @Prop()
     password: string;
-    @Prop({ default: false }) 
+    @Prop({ default: true }) 
     isActive: boolean;
     @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Role' }] })
     role: Role [];
+     @Prop({ type: String, default: null })
+     pinCode: string;
   }
 
     export const  UserSchema=SchemaFactory.createForClass(User);
