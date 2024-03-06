@@ -11,8 +11,8 @@ import {
     Put
 } from "@nestjs/common";
 import {CongeService} from "./Conge.service";
-import {Leave} from "../Shemas/Leaves.schema";
 import {CreateLeaveDto} from "./dto/createConge.dto";
+import {Leave} from "./Schema/Leaves.schema";
 
 @Controller('Conge')
 export class CongeController {

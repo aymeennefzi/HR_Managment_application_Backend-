@@ -1,15 +1,14 @@
 import {HttpException, Injectable, NotFoundException} from "@nestjs/common";
 import {InjectModel} from '@nestjs/mongoose'
-import {Leave, TimeOfDay} from "../Shemas/Leaves.schema";
 import {Model} from 'mongoose'
 import {CreateLeaveDto} from "./dto/createConge.dto";
-import {PersonnelService} from "../personnel/Personnel.service";
-import {Personnel} from "../Shemas/Presonnel.schema";
-import {Cron} from "@nestjs/schedule";
+import {Leave, TimeOfDay} from "./Schema/Leaves.schema";
+import {AuthService} from "../auth/auth.service";
+import {User} from "../auth/Shemas/User.shema";
 
 @Injectable()
 export class CongeService {
-    constructor(@InjectModel(Leave.name) private leaveModel:Model<Leave> , private readonly personelService : PersonnelService , @InjectModel(Personnel.name) private personnelModel:Model<Personnel>) {
+    constructor(@InjectModel(Leave.name) private leaveModel:Model<Leave> , private readonly personelService :AuthService , @InjectModel(User.name) private personnelModel:Model<User>) {
     }
     async accepterDemandeConge(id: string): Promise<Leave> {
         const demandeConge = await this.leaveModel.findById(id);
@@ -49,22 +48,22 @@ export class CongeService {
         }
         await this.personnelModel.updateOne({ Leave: id }, { $pull: { Conges: id } });
     }
-    @Cron('0 0 1 1 * *')
-    //@Cron(CronExpression.EVERY_5_SECONDS)
-    async updateCongeBalance() {
-        try {
-            console.log('Updating conge balance for all employees...');
-            const employees = await this.personnelModel.find();
-            for (const employee of employees) {
-                employee.soldeConges += 30;
-                await employee.save();
-            }
-
-            console.log('Conge balance updated for all employees.');
-        } catch (error) {
-            console.error('Error updating conge balance:', error);
-        }
-    }
+    // @Cron('0 0 1 1 * *')
+    // //@Cron(CronExpression.EVERY_5_SECONDS)
+    // async updateCongeBalance() {
+    //     try {
+    //         console.log('Updating conge balance for all employees...');
+    //         const employees = await this.personnelModel.find();
+    //         for (const employee of employees) {
+    //             employee.soldeConges += 30;
+    //             await employee.save();
+    //         }
+    //
+    //         console.log('Conge balance updated for all employees.');
+    //     } catch (error) {
+    //         console.error('Error updating conge balance:', error);
+    //     }
+    // }
     async updateConge(id: string, updateLeaveDto: CreateLeaveDto): Promise<Leave> {
         const existingConge = await this.leaveModel.findById(id);
         if (!existingConge) {

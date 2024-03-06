@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, {Document, Types} from 'mongoose';
-import {Personnel} from "./Presonnel.schema";
+import {User} from "../../auth/Shemas/User.shema";
 
 
 export enum LeaveType {
@@ -59,8 +59,8 @@ export class Leave extends Document {
     @Prop({ default: Date.now })
     updatedAt: Date;
 
-    @Prop({ type: Types.ObjectId, ref: 'Personnel', required: true })
-    personnel: Personnel;
+    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+    personnel: User;
 }
 
 export const LeaveSchema = SchemaFactory.createForClass(Leave);

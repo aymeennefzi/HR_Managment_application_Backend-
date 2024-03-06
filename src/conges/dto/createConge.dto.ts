@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator';
-import {LeaveType, TimeOfDay} from "../../Shemas/Leaves.schema";
+import {LeaveType, TimeOfDay} from "../Schema/Leaves.schema";
 
 export class CreateLeaveDto {
     @IsNotEmpty()

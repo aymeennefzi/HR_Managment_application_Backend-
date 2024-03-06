@@ -1,4 +1,13 @@
-import { BadRequestException, Body, HttpException, Injectable, NotFoundException, Res, UnauthorizedException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Body,
+    HttpException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+    Res,
+    UnauthorizedException
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './Shemas/User.shema';
 import { Model } from 'mongoose';
@@ -194,5 +203,17 @@ async findByIdWithRole(id: string): Promise<User> {
   const user = await this.userMosel.findOne({ _id:decodedToken.id })
   return user;
  }
+
+    async getSoldesConges(id : string): Promise<number>{
+        try {
+            const personnel = await this.userMosel.findById(id);
+            if (!personnel){
+                throw new NotFoundException('personnel introuvable')
+            }
+            return personnel.soldeConges ;
+        }catch (error){
+            throw new InternalServerErrorException('Erreur lors de la récuperation du solde de congés')
+        }
+    }
 
 }

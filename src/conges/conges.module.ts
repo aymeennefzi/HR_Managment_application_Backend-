@@ -2,22 +2,22 @@ import { Module} from '@nestjs/common';
 import {CongeService} from "./Conge.service";
 import {CongeController} from "./Conge.controller";
 import {MongooseModule} from "@nestjs/mongoose"
-import {Leave, LeaveSchema} from "../Shemas/Leaves.schema";
-import {PersonnelModule} from "../personnel/personnel.module";
-import {PersonnelService} from "../personnel/Personnel.service";
-import {Personnel, PersonnelSchema} from "../Shemas/Presonnel.schema";
+import {User, UserSchema} from "../auth/Shemas/User.shema";
+import {Leave, LeaveSchema} from "./Schema/Leaves.schema";
+import {AuthModule} from "../auth/auth.module";
+import {AuthService} from "../auth/auth.service";
 
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Leave.name, schema: LeaveSchema },
-      {name : Personnel.name , schema : PersonnelSchema}
+      {name : User.name , schema : UserSchema}
     ]),
-  PersonnelModule
+      AuthModule
   ],
   controllers :[CongeController],
-  providers: [ CongeService , PersonnelService ],
+  providers: [ CongeService , AuthService ],
 
 })
 export class CongesModule {}
