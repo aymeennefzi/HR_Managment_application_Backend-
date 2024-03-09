@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import {CongesModule} from "./conges/conges.module";
 import { DepartementsModule } from './departements/departements.module';
 import { EntreprisesModule } from './entreprises/entreprises.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { EntreprisesModule } from './entreprises/entreprises.module';
     AuthModule,
       CongesModule,
       DepartementsModule,
-      EntreprisesModule
+      EntreprisesModule,
+      ProjectModule
       
 
   ],
