@@ -16,12 +16,16 @@ import { ResetPasswordDto } from './dto/ResetPasswordDto';
 export class AuthController {
     constructor(private authservice:AuthService){}
 
-    @Post('/signup')
-  async signup(@Body()signupdto:signupDto):Promise<{token:string}>{
-    console.log(signupDto);
-    return this.authservice.SignUp(signupdto);
-   
-}
+//     @Post('/signup')
+//   async signup(@Body()signupdto:signupDto):Promise<{token:string}>{
+//     console.log(signupDto);
+//     return this.authservice.SignUp(signupdto);  
+// }
+
+  @Post('signup')
+    async signUp(@Body() signupDto: signupDto): Promise<{ token: string }> {
+    return this.authservice.signUp(signupDto);
+  }
     @Post('/login')
   async login(@Body()logindto:loginDto,  @Res({ passthrough: true }) res: Response):Promise<{token:string}>{
     const { token, expiresIn } = await this.authservice.login(logindto);
@@ -38,18 +42,18 @@ export class AuthController {
     return this.authservice.findByIdWithRole(id);
   }
 
-  @Get('/check-admin')
-  async checkAdmin(@Req() request: Request): Promise<boolean> {
-    const authorizationHeader = request.headers['authorization'];
-    if (!authorizationHeader) {
-      throw new UnauthorizedException('Authorization header missing');
-    }
+  // @Get('/check-admin')
+  // async checkAdmin(@Req() request: Request): Promise<boolean> {
+  //   const authorizationHeader = request.headers['authorization'];
+  //   if (!authorizationHeader) {
+  //     throw new UnauthorizedException('Authorization header missing');
+  //   }
   
-    const token = authorizationHeader.split(' ')[1];
-    let itsadmin = await this.authservice.checkifadmin(token);
-    console.log(itsadmin);
-    return itsadmin;
-  }
+  //   const token = authorizationHeader.split(' ')[1];
+  //   let itsadmin = await this.authservice.checkifadmin(token);
+  //   console.log(itsadmin);
+  //   return itsadmin;
+  // }
   
 
 

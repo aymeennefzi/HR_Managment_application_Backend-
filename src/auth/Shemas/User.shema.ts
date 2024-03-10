@@ -19,8 +19,8 @@ import {Leave} from "../../conges/Schema/Leaves.schema";
       @Prop({ default: true })
       isActive: boolean;
 
-      @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Role' }] })
-      role: Role [];
+      @Prop({ type: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' }})
+      role: Role ;
 
       @Prop({ type: String, default: null })
       pinCode: string;

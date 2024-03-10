@@ -13,41 +13,41 @@ export class RolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
-    console.log(requiredRoles);
-    if (!requiredRoles) {
-      return true; 
-    }
-    const request: Request = context.switchToHttp().getRequest();
-    const token = request.headers.authorization.split(' ')[1];
-    console.log(token); // Récupérer le token du header Authorization
+  //   const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
+  //   console.log(requiredRoles);
+  //   if (!requiredRoles) {
+  //     return true; 
+  //   }
+  //   const request: Request = context.switchToHttp().getRequest();
+  //   const token = request.headers.authorization.split(' ')[1];
+  //   console.log(token); // Récupérer le token du header Authorization
 
-    if (!token) {
-      return false; 
-    }
+  //   if (!token) {
+  //     return false; 
+  //   }
 
-    try {
-      const decodedToken: any = jwt.verify(token, 'bahazaidi'); // Décoder le token avec votre clé secrète
-      const userId = decodedToken.id;
-      console.log(userId);
+  //   try {
+  //     const decodedToken: any = jwt.verify(token, 'bahazaidi'); // Décoder le token avec votre clé secrète
+  //     const userId = decodedToken.id;
+  //     console.log(userId);
 
-      if (!userId) {
-        return false; 
-      }
+  //     if (!userId) {
+  //       return false; 
+  //     }
 
-      const user = await this.userService.findByIdWithRole(userId);
-      console.log(user);
+  //     const user = await this.userService.findByIdWithRole(userId);
+  //     console.log(user);
 
-      if (!user || !user.role || !user.role.length) {
-        return false; 
-      }
+  //     if (!user || !user.role || !user.role.length) {
+  //       return false; 
+  //     }
 
-      const userRoles = user.role.map(role => role.name);
-      console.log(userRoles);
+  //     const userRoles = user.role.map(role => role.name);
+  //     console.log(userRoles);
 
-      return requiredRoles.some(role => userRoles.includes(role));
-    } catch (error) {
+  //     return requiredRoles.some(role => userRoles.includes(role));
+  //   } catch (error) {
       return false;
-    }
-  }
+     }
+  // }
 }

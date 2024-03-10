@@ -22,7 +22,8 @@ import { ProjectModule } from './project/project.module';
       CongesModule,
       DepartementsModule,
       EntreprisesModule,
-      ProjectModule
+      ProjectModule,
+    
       
 
   ],
