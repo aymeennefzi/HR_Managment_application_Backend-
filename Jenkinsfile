@@ -35,7 +35,7 @@ pipeline {
         stage('Build application') {
             steps {
                 script {
-                    sh('nest build')
+                    sh('npm run build')
                 }
             }
         }
