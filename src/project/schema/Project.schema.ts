@@ -6,14 +6,14 @@ import { Tasks } from "./Tasks.schema";
 
 @Schema()
 export  class Project {
-@Prop({unique:true,required:true})
+@Prop({required:true})
 NomProject:string;
 @Prop()
 description:string;
 @Prop()
-StartDate:Date;
+StartDate:string;
 @Prop()
-FinishDate?:Date;
+FinishDate?:string;
 @Prop()
  statut?:TypeStatutProjet;
  @Prop()
@@ -22,16 +22,18 @@ FinishDate?:Date;
 tasks:Tasks []; 
 @Prop()
  NomChefProjet?:string
+@Prop()
+priority?:string;
 }
 export const ProjectSchema= SchemaFactory.createForClass(Project)
 export enum TypeStatutProjet {
     NOUVEAU = 'nouveau',
-    EN_COURS = 'en cours',
-    TERMINE = 'terminé',
+    EN_COURS = 'en_cours',
+    TERMINE = 'termine',
   }
   
   export enum TypeStatutTache {
     A_FAIRE = 'à faire',
-    EN_COURS = 'en cours',
-    TERMINE = 'terminé',
+    EN_COURS = 'en_cours',
+    TERMINE = 'termine',
   }

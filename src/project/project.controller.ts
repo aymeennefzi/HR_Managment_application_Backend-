@@ -1,11 +1,13 @@
-import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post, Sse, UsePipes, ValidationPipe } from '@nestjs/common';
 import mongoose from 'mongoose';
+import { NotificationService } from 'src/notification/notification.service';
 import { CreateProjectDto } from './dto/CreateProject.dto';
 import { ProjectService } from './project.service';
 
 @Controller('project')
 export class ProjectController {
-    constructor(private projectService:ProjectService){}
+    constructor(private projectService:ProjectService,private notificationService:NotificationService){}
+   
     @Post()
     @UsePipes(new ValidationPipe())//enbales validation locally
    createUser(@Body()createuserdto:CreateProjectDto){

@@ -1,23 +1,28 @@
 import { Prop, Schema, SchemaFactory  } from "@nestjs/mongoose";
 import mongoose from "mongoose";
+import { User } from "src/user/Shemas/User.shema";
 import { Project, TypeStatutTache } from "./Project.schema";
 ;
 
 
 @Schema()
 export  class Tasks{
-    @Prop({unique:true,required:true})
+    @Prop({required:true})
     NomTask:string;
     @Prop()
     description:string;
     @Prop()
-    startDate:Date;
+    startDate:string;
     @Prop()
-    FinishDate?:Date
+    FinishDate?:string
     @Prop()
     statut?:TypeStatutTache
     @Prop({type:mongoose.Schema.Types.ObjectId,ref:'Project'})
     Project?:Project;
+    @Prop()
+    priority?:string;
+    @Prop({type:mongoose.Schema.Types.ObjectId,ref:'User'})
+    employeeAffected?:User;
 
 
 

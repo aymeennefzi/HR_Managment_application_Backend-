@@ -42,4 +42,11 @@ async deleteTask(@Param('id') id:string){
  console.log(deletedTask)
 
 }
+@Post('/post')
+@UsePipes(new ValidationPipe())//enbales validation locally
+createtask2(@Body()createtaskdto:CreateTasksDto){
+
+return this.taskService.createTask2(createtaskdto);
 }
+}
+                                                                                                                            
