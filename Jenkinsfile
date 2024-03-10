@@ -23,9 +23,8 @@ pipeline {
                 }
             }
         }
-        stage('Unit Test') {
+        stage('Unit Test skiped') {
             when {
-                // Ajoutez ici la condition pour sauter le test unitaire
                 expression { false }
             }
             steps {
