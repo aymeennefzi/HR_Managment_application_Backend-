@@ -8,6 +8,8 @@ import {AuthModule} from "../auth/auth.module";
 import {AuthService} from "../auth/auth.service";
 import {JwtService} from "@nestjs/jwt";
 import {MailerService} from "../auth/Mail.service";
+import { Roleservice } from 'src/auth/Role.service';
+import { Role, RoleSchema } from 'src/auth/Shemas/Roles.Shema';
 
 
 @Module({
@@ -15,11 +17,12 @@ import {MailerService} from "../auth/Mail.service";
     MongooseModule.forFeature([
       { name: Leave.name, schema: LeaveSchema },
       {name : User.name , schema : UserSchema},
+      {name :  Role.name , schema : RoleSchema}
     ]),
       AuthModule
   ],
   controllers :[CongeController],
-  providers: [ CongeService , AuthService , JwtService , MailerService],
+  providers: [ CongeService , AuthService , JwtService , MailerService , Roleservice ],
 
 })
 export class CongesModule {}

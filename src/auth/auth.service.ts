@@ -19,6 +19,8 @@ import { MailerService } from './Mail.service';
 import { UpdateProfileDto } from './dto/UpdateProfileDto';
 import { UpdatePasswordDto } from './dto/UpdatePasswordDto';
 import * as jwt from 'jsonwebtoken';
+import { Observable } from 'rxjs';
+import { Roleservice } from './Role.service';
 
 @Injectable()
 export class AuthService {
@@ -27,23 +29,50 @@ export class AuthService {
         private userMosel:Model<User>,
         private jwtservice:JwtService,
         private mailerService: MailerService,
+        private readonly roleS : Roleservice
     ){}
-    async SignUp(signupDto: signupDto): Promise<{ token: string }> {
-      const { name, email, password } = signupDto;
+    // async SignUp(signupDto: signupDto): Promise<{ token: string }> {
+    //   const { name, email, password } = signupDto;
+    //   const hashedPassword = await bcrypt.hash(password, 10);
+    //   const user = await this.userMosel.create({
+    //     name,
+    //     email,
+    //     password: hashedPassword,
+    //     role : this.roleS.assignRoleToUser(user)
+    //   });
+  
+    //   const token = this.jwtservice.sign({ id: user._id });
+  
+    //   const welcomeMessage = `Votre compte a été créé avec succès. Voici votre mot de passe : ${password}`;
+    // await this.mailerService.sendEmail(email, 'Bienvenue sur notre plateforme', welcomeMessage);
+  
+    //   return { token };
+    // }
+
+    async signUp(signupDto: signupDto): Promise<{ token: string }> {
+      const { name, email, password, roleName } = signupDto;
       const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await this.userMosel.create({
+  
+      const role = await this.roleS.findRoleByName(roleName); 
+  
+      const user = new this.userMosel({
         name,
         email,
         password: hashedPassword,
+        role: role._id // Assurez-vous que votre modèle User peut stocker une référence au rôle
       });
   
-      const token = this.jwtservice.sign({ id: user._id });
+      await user.save();
   
-      const welcomeMessage = `Votre compte a été créé avec succès. Voici votre mot de passe : ${password}`;
-    await this.mailerService.sendEmail(email, 'Bienvenue sur notre plateforme', welcomeMessage);
+      // Générez le token ici, selon votre logique d'authentification
+      const token = this.jwtservice.sign({ id: user._id , role : role._id});;
   
       return { token };
     }
+
+
+
+   
 // async login(logindto:loginDto): Promise<{token:string}>
 // {
 //     const {email,password}=logindto;
@@ -78,20 +107,25 @@ async login(logindto: loginDto): Promise<{ token: string; expiresIn: number }> {
   if (!user.isActive) {
     throw new HttpException('Votre compte n\'est pas activé par l\'administrateur', 400);
   }
-  const token = this.jwtservice.sign({ id: user.id });
+  const token = this.jwtservice.sign({ id: user.id , role: user.role});
   const expiresIn = 3600; 
 
   return { token, expiresIn };
 }
+
 async findByIdWithRole(id: string): Promise<User> {
-    return await this.userMosel.findById(id).populate('role');
+  
+  let test =  await this.userMosel.findById(id).populate('role');
+  console.log(test);
+  return test ;
   }
-  async activateUser(userId: string): Promise<User> {
-    const user = await this.userMosel.findByIdAndUpdate(
-      userId,
-      { isActive: true },
-      { new: true },
-    );
+
+async activateUser(userId: string): Promise<User> {
+  const user = await this.userMosel.findByIdAndUpdate(
+    userId,
+    { isActive: true },
+    { new: true },
+  );
   
     if (user) {
       const activationMessage =
@@ -182,14 +216,14 @@ async findByIdWithRole(id: string): Promise<User> {
     user.pinCode = null;
     await user.save();
   }
- async checkifadmin(token:string):Promise<boolean>{
-  const decodedToken: any = jwt.verify(token, 'bahazaidi'); 
-  const userId = decodedToken.id;
-  const user = await this.findByIdWithRole(userId);
-  const userRoles = user.role.map(role => role.name);
-  return userRoles.includes('admin');
+//  async checkifadmin(token:string):Promise<boolean>{
+//   const decodedToken: any = jwt.verify(token, 'bahazaidi'); 
+//   const userId = decodedToken.id;
+//   const user = await this.findByIdWithRole(userId);
+//   const userRoles = user.role.map(role => role.name);
+//   return userRoles.includes('admin');
 
- }
+//  }
  async checkifemailvalid(email:string):Promise<boolean>{
   const user=await this.userMosel.findOne({email});
   if(!user){return false;}
@@ -203,6 +237,7 @@ async findByIdWithRole(id: string): Promise<User> {
   const user = await this.userMosel.findOne({ _id:decodedToken.id })
   return user;
  }
+ 
 
     async getSoldesConges(id : string): Promise<number>{
         try {
