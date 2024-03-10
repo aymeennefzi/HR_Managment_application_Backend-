@@ -1,4 +1,4 @@
-// update-profile.dto.ts
+// update-profile.dto.tss
 import { IsString, IsEmail } from 'class-validator';
 
 export class UpdateProfileDto {
