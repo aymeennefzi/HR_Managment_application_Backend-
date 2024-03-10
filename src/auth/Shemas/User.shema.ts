@@ -30,6 +30,8 @@ import {Leave} from "../../conges/Schema/Leaves.schema";
 
       @Prop()
       soldeConges : number ;
+      
+
 
 
   }
