@@ -23,7 +23,7 @@ export class CongeService {
             throw new NotFoundException('Employé introuvable');
         }
 
-        // Utiliser calculateLeaveDuration pour obtenir la durée du congé
+        // Utiliser calculateLeaveDuration pour obtenir la durée du congee
         const { duration } = await this.calculateLeaveDuration(demandeConge.startDate, demandeConge.endDate, demandeConge.startTime, demandeConge.endTime);
 
         personnel.soldeConges -= duration;
