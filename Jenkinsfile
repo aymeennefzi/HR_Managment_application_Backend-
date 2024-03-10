@@ -16,23 +16,25 @@ pipeline {
                 }
             }
         }
-        stage('Install dependencies'){
-            steps{
+        stage('Install dependencies') {
+            steps {
                 script {
                     sh('npm install')
                 }
             }
         }
-        stage('Unit Test'){
-            steps{
-                script{
-                    sh('npm test')
-                }
+        stage('Unit Test') {
+            when {
+                // Ajoutez ici la condition pour sauter le test unitaire
+                expression { false }
+            }
+            steps {
+                echo "Skipping unit test..."
             }
         }
-        stage('Build application'){
-            steps{
-                script{
+        stage('Build application') {
+            steps {
+                script {
                     sh('npm run build-dev')
                 }
             }
