@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { BookModule } from './book/book.module';
 import { AuthModule } from './auth/auth.module';
 import {CongesModule} from "./conges/conges.module";
+import { DepartementsModule } from './departements/departements.module';
+import { EntreprisesModule } from './entreprises/entreprises.module';
 
 @Module({
   imports: [
@@ -17,6 +19,9 @@ import {CongesModule} from "./conges/conges.module";
     BookModule,
     AuthModule,
       CongesModule,
+      DepartementsModule,
+      EntreprisesModule
+      
 
   ],
   controllers: [AppController],
