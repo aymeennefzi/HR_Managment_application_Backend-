@@ -19,8 +19,9 @@ import { MailerService } from './Mail.service';
 import { UpdateProfileDto } from './dto/UpdateProfileDto';
 import { UpdatePasswordDto } from './dto/UpdatePasswordDto';
 import * as jwt from 'jsonwebtoken';
-import { Observable } from 'rxjs';
 import { Roleservice } from './Role.service';
+import {Attendance} from "../attendance/Schema/Attendance.schema";
+import {UpdateAttendanceDto} from "../attendance/dto/Attendance.dto";
 
 @Injectable()
 export class AuthService {
@@ -29,7 +30,8 @@ export class AuthService {
         private userMosel:Model<User>,
         private jwtservice:JwtService,
         private mailerService: MailerService,
-        private readonly roleS : Roleservice
+        private readonly roleS : Roleservice,
+        @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>
     ){}
     // async SignUp(signupDto: signupDto): Promise<{ token: string }> {
     //   const { name, email, password } = signupDto;
@@ -248,6 +250,40 @@ async activateUser(userId: string): Promise<User> {
             return personnel.soldeConges ;
         }catch (error){
             throw new InternalServerErrorException('Erreur lors de la récuperation du solde de congés')
+        }
+    }
+
+    async getPersonnelWithAttendances(idP : string): Promise<User> {
+        const personnel = this.userMosel.findById(idP).populate(['attendances']);
+        if (!personnel) {
+            throw new NotFoundException('personnel not found');
+        }
+        return personnel ;
+    }
+    async getAttendaces(idp: string): Promise<Attendance[]> {
+        const personnel = await this.userMosel.findById(idp).populate(['attendances']);
+        return personnel.attendances;
+    }
+    async updateAttendanceList(personnelId: string, attend: UpdateAttendanceDto[]): Promise<void> {
+        console.log(attend);
+        const attendanceList = await this.getAttendaces(personnelId);
+        if (!attendanceList) {
+            console.log('Impossible de récupérer la liste des présences.');
+            return;
+        }
+        console.log(attendanceList);
+        for (const attendance of attendanceList) {
+            for (const att of attend) {
+                const attendanceDate = new Date(attendance.date).setHours(0, 0, 0, 0);
+                const attDate = new Date(att.date).setHours(0, 0, 0, 0);
+                if (attendanceDate === attDate) {
+                    attendance.status = att.status;
+                    console.log(attendance.status);
+                    // Mettre à jour l'objet de présence
+                    await attendance.save();
+                    console.log(attendance);
+                }
+            }
         }
     }
 

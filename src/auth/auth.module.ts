@@ -11,6 +11,9 @@ import { Rolecontroller } from './Role.controller';
 import { Roleservice } from './Role.service';
 import { RoleSchema } from './Shemas/Roles.Shema';
 import { MailerService } from './Mail.service';
+import { AttendanceService } from 'src/attendance/attendance.service';
+import { Attendance, AttendanceSchema } from 'src/attendance/Schema/Attendance.schema';
+
 @Module({
   imports:[
     PassportModule.register({defaultStrategy:'jwt'}),
@@ -23,11 +26,15 @@ import { MailerService } from './Mail.service';
         }
       })
     }),
-    MongooseModule.forFeature([{name:User.name ,schema:UserSchema},
-     { name: 'Role', schema: RoleSchema }])
+    MongooseModule.forFeature([
+      {name:User.name ,schema:UserSchema},
+     { name: 'Role', schema: RoleSchema },
+     {name:Attendance.name ,schema:AttendanceSchema},
+
+     ])
   ],
   controllers: [AuthController,Rolecontroller],
-  providers: [AuthService,jwtstrategy,Roleservice,MailerService],
+  providers: [AuthService,jwtstrategy,Roleservice,MailerService , AttendanceService],
   exports:[jwtstrategy,PassportModule]
 })
 

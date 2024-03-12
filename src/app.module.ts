@@ -3,12 +3,12 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { BookModule } from './book/book.module';
 import { AuthModule } from './auth/auth.module';
 import {CongesModule} from "./conges/conges.module";
 import { DepartementsModule } from './departements/departements.module';
 import { EntreprisesModule } from './entreprises/entreprises.module';
 import { ProjectModule } from './project/project.module';
+import {AttendanceModule} from "./attendance/attendance.module";
 
 @Module({
   imports: [
@@ -17,12 +17,12 @@ import { ProjectModule } from './project/project.module';
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.DB_URI),
-    BookModule,
     AuthModule,
       CongesModule,
       DepartementsModule,
       EntreprisesModule,
       ProjectModule,
+      AttendanceModule
     
       
 

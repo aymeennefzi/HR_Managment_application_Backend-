@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Role } from './Roles.Shema';
 import {Leave} from "../../conges/Schema/Leaves.schema";
+import {Attendance} from "../../attendance/Schema/Attendance.schema";
 
 @Schema({
     timestamps: true,
@@ -30,8 +31,9 @@ import {Leave} from "../../conges/Schema/Leaves.schema";
 
       @Prop()
       soldeConges : number ;
-      
 
+    @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attendance' }] })
+    attendances: Attendance[];
 
 
   }
