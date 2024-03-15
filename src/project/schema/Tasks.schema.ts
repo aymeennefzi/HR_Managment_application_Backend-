@@ -24,7 +24,7 @@ export  class Tasks{
     priority?:string;
     @Prop({type:mongoose.Schema.Types.ObjectId,ref:'User'})
     employeeAffected?:User;
-
+//many  to one
 
 
 }
