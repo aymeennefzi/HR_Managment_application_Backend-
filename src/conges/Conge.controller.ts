@@ -5,6 +5,7 @@ import {
     Get,
     HttpException,
     HttpStatus,
+    Inject,
     NotFoundException,
     Param,
     Post,
@@ -13,10 +14,13 @@ import {
 import {CongeService} from "./Conge.service";
 import {CreateLeaveDto} from "./dto/createConge.dto";
 import {Leave} from "./Schema/Leaves.schema";
+import { InjectModel } from "@nestjs/mongoose";
+import { User } from "src/auth/Shemas/User.shema";
+import { Model } from "mongoose";
 
 @Controller('Conge')
 export class CongeController {
-    constructor(private readonly congeService : CongeService ) {
+    constructor(private readonly congeService : CongeService ,@InjectModel(User.name) private UserModel:Model<User>) {
     }
 
     @Get(':employeeId/leaves')
@@ -42,9 +46,9 @@ export class CongeController {
         }
     }
     @Put(':id/refus')
-    async refuserDemandeConge(@Param('id') id: string, @Body('motifRefus') motifRefus: string): Promise<Leave> {
+    async refuserDemandeConge(@Param('id') id: string): Promise<Leave> {
         try {
-            const demandeConge = await this.congeService.refuserDemandeConge(id, motifRefus);
+            const demandeConge = await this.congeService.refuserDemandeConge(id);
             return demandeConge;
         } catch (error) {
             throw new NotFoundException(error.message);
@@ -74,14 +78,30 @@ export class CongeController {
     async getDemandeConge(@Param('id') congeId: string): Promise<Leave> {
         return this.congeService.getDemandeCongeById(congeId);
     }
-    @Get()
-    async getAllConges(): Promise<Leave[]> {
-        return this.congeService.getAllConges();
-    }
+    
     @Delete(':id')
     async supprimerDemandeConge(@Param('id') id: string) {
         this.congeService.supprimerDemandeConge(id);
     }
+
+    @Get(':id/leaves')
+    async getLeavesByEmployee1(@Param('id') id: string): Promise<Leave[]> {
+        try {
+            const leaves = await this.congeService.getLeavesByEmployee(id);
+            return leaves;
+        } catch (error) {
+            throw new Error(`Failed to fetch leaves for employee ${id}: ${error.message}`);
+        }
+    }
+    // @Get()
+    // async getAllUsersWithConges(): Promise<User[]> {
+    //   return this.congeService.getAllUsersWithConges();
+    // }
+
+    @Get('leaves')
+  async getUsersWithLeaves(): Promise<{ name: string; leaves: Leave[] }[]> {
+    return this.congeService.getUsersWithLeaves();
+  }
 
 
 

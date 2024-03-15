@@ -1,60 +1,36 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { signupDto } from './dto/signupDto';
 import { loginDto } from './dto/login.dto';
 import { User } from './Shemas/User.shema';
-import { RolesGuard } from './Guards/Role.guard';
-import { Roles } from './Decorators/Roledecatror';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateProfileDto } from './dto/UpdateProfileDto';
 import { UpdatePasswordDto } from './dto/UpdatePasswordDto';
 import { ForgotPasswordDto } from './dto/ForgotPasswordDto';
 import { ResetPasswordDto } from './dto/ResetPasswordDto';
+import { Role } from './Shemas/Roles.Shema';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @Controller('auth')
 export class AuthController {
     constructor(private authservice:AuthService){}
 
-//     @Post('/signup')
-//   async signup(@Body()signupdto:signupDto):Promise<{token:string}>{
-//     console.log(signupDto);
-//     return this.authservice.SignUp(signupdto);  
-// }
-
   @Post('signup')
     async signUp(@Body() signupDto: signupDto): Promise<{ token: string }> {
-    return this.authservice.signUp(signupDto);
+    return await this.authservice.signUp(signupDto);
   }
-    @Post('/login')
-  async login(@Body()logindto:loginDto,  @Res({ passthrough: true }) res: Response):Promise<{token:string}>{
-    const { token, expiresIn } = await this.authservice.login(logindto);
-    res.cookie('user_token', token, {
-      httpOnly: true,
-      expires: new Date(Date.now() + expiresIn * 1000), // Expiration du cookie en millisecondes
-    });
-    return { token };
-    
+  @Post('/login')
+  async login(@Body() logindto: loginDto): Promise<{ token: string; expiresIn: number; user: { role: Role; id: string; firstname: string  , lastname : string} }> {
+    return this.authservice.login(logindto);
+  }
 
-  }
+
   @Get('/findrole')
   async findWithRole(@Body('id') id: string): Promise<User> {
     return this.authservice.findByIdWithRole(id);
   }
-
-  // @Get('/check-admin')
-  // async checkAdmin(@Req() request: Request): Promise<boolean> {
-  //   const authorizationHeader = request.headers['authorization'];
-  //   if (!authorizationHeader) {
-  //     throw new UnauthorizedException('Authorization header missing');
-  //   }
-  
-  //   const token = authorizationHeader.split(' ')[1];
-  //   let itsadmin = await this.authservice.checkifadmin(token);
-  //   console.log(itsadmin);
-  //   return itsadmin;
-  // }
-  
 
 
   @Post('/activate')
@@ -81,7 +57,7 @@ export class AuthController {
     }
   }
   @Post('/logout')
- @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard())
   async logout(@Res({ passthrough: true }) res: Response): Promise<void> {
     console.log(res.cookie);
     res.clearCookie('user_token');
@@ -103,10 +79,10 @@ export class AuthController {
 
   @Post('/forgot-password')
   // @UseGuards(AuthGuard())
-  async forgotPassword(@Req() request: Request): Promise<void> {
-    const token = request.headers['authorization'].split(' ')[1];
-    console.log(token); 
-    await this.authservice.sendPinCode(token);
+  async forgotPassword(@Body('email') email : string): Promise<void> {
+    // const token = request.headers['authorization'].split(' ')[1];
+  
+    await this.authservice.sendPinCode(email);
   }
   @Post('/reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<void> {
@@ -130,4 +106,45 @@ export class AuthController {
     const user = await this.authservice.getUserByToken(token);
     return user;
   }
+  @Get('/allusers')
+  async getuserbyid(): Promise<User[]>{
+    return await this.authservice.getusers1();
+  }
+  
+  @Post('uploadImage')
+  @UseInterceptors(FileInterceptor('file' , {storage : diskStorage({
+    destination : './uploads',
+    filename : (req , file , cb)=>{
+      const name = file.originalname.split('.')[0];
+      const fileExtension = file.originalname.split('.')[1];
+      const newFileName = name.split("").join('-') + '-' + Date.now() + '.' + fileExtension;
+      cb(null , newFileName); 
+    }
+  }),
+  fileFilter :(req, file , cb) => {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(null , false);
+    }
+    cb(null, true);
+  }
+}))
+  uploadPhoto(@UploadedFile() file : Express.Multer.File) {
+    if(!file){
+      throw new BadRequestException('File not found');
+      }else{
+        const response = {
+          filePath : 'http://localhost:3000/posts/pictures/' + file.filename
+        };
+        return response ;
+      };
+    }
+
+@Get('pictures/:filename') 
+async getPicture(@Param ('filename') filename , @Res() res){
+  res.sendFile(filename , {root : './uploads'});
 }
+
+
+}
+
+

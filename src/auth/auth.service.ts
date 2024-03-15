@@ -22,6 +22,7 @@ import * as jwt from 'jsonwebtoken';
 import { Roleservice } from './Role.service';
 import {Attendance} from "../attendance/Schema/Attendance.schema";
 import {UpdateAttendanceDto} from "../attendance/dto/Attendance.dto";
+import { Role } from './Shemas/Roles.Shema';
 
 @Injectable()
 export class AuthService {
@@ -33,87 +34,66 @@ export class AuthService {
         private readonly roleS : Roleservice,
         @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>
     ){}
-    // async SignUp(signupDto: signupDto): Promise<{ token: string }> {
-    //   const { name, email, password } = signupDto;
-    //   const hashedPassword = await bcrypt.hash(password, 10);
-    //   const user = await this.userMosel.create({
-    //     name,
-    //     email,
-    //     password: hashedPassword,
-    //     role : this.roleS.assignRoleToUser(user)
-    //   });
-  
-    //   const token = this.jwtservice.sign({ id: user._id });
-  
-    //   const welcomeMessage = `Votre compte a été créé avec succès. Voici votre mot de passe : ${password}`;
-    // await this.mailerService.sendEmail(email, 'Bienvenue sur notre plateforme', welcomeMessage);
-  
-    //   return { token };
-    // }
-
+   
     async signUp(signupDto: signupDto): Promise<{ token: string }> {
-      const { name, email, password, roleName } = signupDto;
+      const { firstName, lastName , email, password, roleName , EmailSecondaire , TelSecondaire , dateEntree , Tel , Matricule  , soldeConges , soldeMaladie , fonction} = signupDto;
       const hashedPassword = await bcrypt.hash(password, 10);
-  
       const role = await this.roleS.findRoleByName(roleName); 
-  
+      const savedRole= await role.save()
       const user = new this.userMosel({
-        name,
+        firstName,
+        lastName,
         email,
         password: hashedPassword,
-        role: role._id // Assurez-vous que votre modèle User peut stocker une référence au rôle
+        role ,// Assurez-vous que votre modèle User peut stocker une référence au rôle
+        EmailSecondaire,
+        TelSecondaire ,
+        dateEntree ,
+        Tel,
+        Matricule ,
+        soldeConges ,
+        soldeMaladie ,
+        fonction
       });
-  
       await user.save();
-  
+      await this.userMosel.updateOne({_id : user._id},{$push: {role : savedRole.name}});
       // Générez le token ici, selon votre logique d'authentification
-      const token = this.jwtservice.sign({ id: user._id , role : role._id});;
-  
+      const token = this.jwtservice.sign({ id: user._id , role : role.name});;
+
+    const welcomeMessage = `Votre compte a été créé avec succès. Voici votre mot de passe : ${password}`;
+    await this.mailerService.sendEmail(email, 'Bienvenue sur notre plateforme', welcomeMessage)
       return { token };
     }
 
+    async getusers1(): Promise<User[]>{
+      return  await this.userMosel.find().populate('role');
+    }
+    async login(logindto: loginDto): Promise<{ token: string; expiresIn: number; user: { role: Role; id: string; firstname: string  , lastname : string} }> {
+      const { email, password } = logindto;
 
+      const user = await this.userMosel.findOne({ email });
+      if (!user) {
+        throw new UnauthorizedException('Invalid Email or Password !!!');
+      }
+      const isPasswordMatched = await bcrypt.compare(password, user.password);
+      if (!isPasswordMatched) {
+        throw new UnauthorizedException('Invalid Email or Password !!!');
+      }
+      if (!user.isActive) {
+        throw new HttpException('Votre compte n\'est pas activé par l\'administrateur', 400);
+      }
+      const token = this.jwtservice.sign({ id: user.id, role: user.role, firstname: user.firstName , lastname : user.lastName });
+      const expiresIn = 3600;
 
-   
-// async login(logindto:loginDto): Promise<{token:string}>
-// {
-//     const {email,password}=logindto;
+      const userData = {
+        role: user.role,
+        id: user.id,
+        firstname: user.firstName ,
+        lastname : user.lastName
+      };
 
-//     const user=await  this.userMosel.findOne({email});
-//     if( !user ){
-//         throw new  UnauthorizedException('Invalid Email or Password !!!')
-//     }
-//     const isPasswordMatched=await  bcrypt.compare(password,user.password);
-//     if( !isPasswordMatched ){
-//         throw new  UnauthorizedException('Invalid Email or Password !!!')
-//     }
-//     if (!user.isActive) {
-//         throw new HttpException('Votre compte n\'est pas activé par l\'administrateur',400);
-//       }
-//     const token=this.jwtservice.sign({id:user.id})
- 
-//     return {token}
-
-// }
-async login(logindto: loginDto): Promise<{ token: string; expiresIn: number }> {
-  const { email, password } = logindto;
-
-  const user = await this.userMosel.findOne({ email });
-  if (!user) {
-    throw new UnauthorizedException('Invalid Email or Password !!!');
-  }
-  const isPasswordMatched = await bcrypt.compare(password, user.password);
-  if (!isPasswordMatched) {
-    throw new UnauthorizedException('Invalid Email or Password !!!');
-  }
-  if (!user.isActive) {
-    throw new HttpException('Votre compte n\'est pas activé par l\'administrateur', 400);
-  }
-  const token = this.jwtservice.sign({ id: user.id , role: user.role});
-  const expiresIn = 3600; 
-
-  return { token, expiresIn };
-}
+      return { token, expiresIn, user: userData };
+    }
 
 async findByIdWithRole(id: string): Promise<User> {
   
@@ -187,25 +167,34 @@ async activateUser(userId: string): Promise<User> {
     await user.save();
   }
 
-  async sendPinCode(token: string): Promise<void> {
-    const decodedToken :any = jwt.verify(token,'bahazaidi'); 
-    const userId = decodedToken.id;
+  async sendPinCode(email : string ): Promise<void> {
+    // const decodedToken :any = jwt.verify(token,'bahazaidi'); 
+    // const userId = decodedToken.id;
   
-    const user = await this.userMosel.findById(userId);
+    // const user = await this.userMosel.findById(userId);
   
-    if (!user) {
-      throw new NotFoundException('Utilisateur non trouvé');
-    }
+    // if (!user) {
+    //   throw new NotFoundException('Utilisateur non trouvé');
+    // }ch
+    if(this.checkifemailvalid(email)){
+      let user = await this.userMosel.findOne({ email });
   
     const pinCode = Math.floor(1000 + Math.random() * 9000).toString(); 
     user.pinCode = pinCode;
     await user.save();
+   
+
+ 
   
     await this.mailerService.sendEmail(
-      user.email,
+     email,
       'Code PIN de réinitialisation du mot de passe',
       `Votre code PIN de réinitialisation du mot de passe est : ${pinCode}`,
     );
+  }
+  else {
+    throw new BadRequestException('Email invalide');
+  }
   }
   async resetPassword(newPassword: string, pinCode: string): Promise<void> {
     const user = await this.userMosel.findOne({ pinCode });
@@ -286,7 +275,4 @@ async activateUser(userId: string): Promise<User> {
             }
         }
     }
-
-    
-
 }

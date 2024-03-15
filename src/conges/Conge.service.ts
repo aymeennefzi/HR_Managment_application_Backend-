@@ -31,13 +31,13 @@ export class CongeService {
 
         return demandeConge;
     }
-    async refuserDemandeConge(id: string, motifRefus: string): Promise<Leave> {
+    async refuserDemandeConge(id: string): Promise<Leave> {
         const demandeConge = await this.leaveModel.findById(id);
         if (!demandeConge) {
             throw new NotFoundException('Demande de congé introuvable');
         }
         demandeConge.status = 'Declined';
-        demandeConge.motifRefus = motifRefus;
+        //demandeConge.motifRefus = motifRefus;
         return demandeConge.save();
 
     }
@@ -88,13 +88,7 @@ export class CongeService {
             throw new NotFoundException('Impossible de mettre à jour une demande de congé déjà approuvée');
         }
     }
-    async getAllConges(): Promise<Leave[]> {
-        const conges = await this.leaveModel.find().exec();
-        if (!conges || conges.length === 0) {
-            throw new NotFoundException('Aucun congé trouvé');
-        }
-        return conges;
-    }
+   
     async getDemandeCongeById(congeId: string): Promise<Leave> {
         const conge = await this.leaveModel.findById(congeId);
         if (!conge) {
@@ -102,15 +96,28 @@ export class CongeService {
         }
         return conge;
     }
+
+    async getAllUsers(): Promise<User[]> {
+        const users = await this.personnelModel.find().populate('congés').exec();
+      
+        if (!users || users.length === 0) {
+          throw new NotFoundException('Aucun utilisateur trouvé');
+        }
+      
+        return users;
+      }
     async getLeavesByEmployee(id: string): Promise<Leave[]> {
         try {
-            const leaves = await this.leaveModel.find({ personnel: id }).exec();
-            return leaves;
+            const user = await this.personnelModel.findById(id).populate('leaves'); // Utilisez populate pour récupérer les congés associés à l'employé
+            if (!user) {
+                throw new Error(`Employee not found with id ${id}`);
+            }
+            return user.leaves; // Renvoie les congés de l'employé
         } catch (error) {
             throw new Error(`Failed to fetch leaves for employee ${id}: ${error.message}`);
         }
     }
-    async getLeaveBalance(id: string): Promise<number> {
+   async getLeaveBalance(id: string): Promise<number> {
         const personnel = await this.personnelModel.findOne({ _id: id });
         if (!personnel) {
             throw new Error('Employee not found');
@@ -170,7 +177,7 @@ export class CongeService {
         if (!findPersonnel) {
             throw new HttpException('Employee not found', 404);
         }
-
+        console.log(findPersonnel)
         const { startDate, endDate, startTime, endTime } = leaveData;
         const { days, duration } = await this.calculateLeaveDuration(startDate, endDate, startTime, endTime);
         const numOfDays = duration;
@@ -192,4 +199,50 @@ export class CongeService {
         };
         return response;
     }
+    async getAllUsersWithConges1(): Promise<User[]> {
+        const users = await this.personnelModel.find().populate(['leaves']).exec();
+      
+        if (!users || users.length === 0) {
+          throw new NotFoundException('Aucun utilisateur trouvé');
+        }
+      
+        return users;
+      }
+
+    //   async getAllUsersWithConges(): Promise<User[]> {
+    //     const users = await this.personnelModel.find().populate('leaves').exec();
+      
+    //     if (!users || users.length === 0) {
+    //       throw new NotFoundException('Aucun utilisateur trouvé');
+    //     }
+      
+    //     const usersWithConges: User[] = users.map((user) => {
+    //       const userWithConges: User = {
+    //         name: user.name,
+    //         Leave: user.leaves.map((leave) => ({
+    //           startDate: leave.startDate,
+    //           startTime: leave.startTime,
+    //           endDate : leave.endDate ,
+    //           endTime : leave.endTime,
+    //           leaveType: leave.leaveType,
+    //           status: leave.status,
+    //         })),
+    //       };
+    //       return userWithConges;
+    //     });
+      
+    //     return usersWithConges;
+    //   }
+    async getUsersWithLeaves(): Promise<{ name: string; leaves: Leave[] }[]> {
+        const usersWithLeaves = await this.personnelModel
+          .find()
+          .populate('leaves')
+          .exec();
+    
+        return usersWithLeaves.map((user) => ({
+          name: user.firstName + ' ' + user.lastName,
+          id : user._id,
+          leaves: user.leaves,
+        }));
+      }
 }
