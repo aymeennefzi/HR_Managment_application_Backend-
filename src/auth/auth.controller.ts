@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Put, Req, Request, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { signupDto } from './dto/signupDto';
 import { loginDto } from './dto/login.dto';
@@ -12,10 +12,20 @@ import { ResetPasswordDto } from './dto/ResetPasswordDto';
 import { Role } from './Shemas/Roles.Shema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { UpdateAttendanceDto } from 'src/attendance/dto/Attendance.dto';
+import * as fs from 'fs';
+import axios from 'axios';
+import { Observable, catchError, map } from 'rxjs';
+
+import { join } from 'path';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Attendance } from 'src/attendance/Schema/Attendance.schema';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authservice:AuthService){}
+    constructor(private authservice:AuthService , @InjectModel(User.name)
+    private userMosel:Model<User>){}
 
   @Post('signup')
     async signUp(@Body() signupDto: signupDto): Promise<{ token: string }> {
@@ -30,6 +40,11 @@ export class AuthController {
   @Get('/findrole')
   async findWithRole(@Body('id') id: string): Promise<User> {
     return this.authservice.findByIdWithRole(id);
+  }
+
+  @Get('/finduser/:id')
+  async findUserById(@Param('id') id: string): Promise<User> {
+    return this.authservice.findById(id);
   }
 
 
@@ -63,12 +78,9 @@ export class AuthController {
     res.clearCookie('user_token');
   }
 
-  @Patch('/update-profile')
-  @UseGuards(AuthGuard())
-  async updateProfile(@Req() req: Request, @Body() updateDto: UpdateProfileDto): Promise<User> {
-    const { user } = req as any;
-    const updatedUser = await this.authservice.updateUser(user.id, updateDto);
-    return updatedUser;
+  @Patch('updateProfile/:id')
+  async updateUser(@Param('id') userId: string, @Body() updateDto: UpdateProfileDto): Promise<User> {
+    return this.authservice.updateUser(userId, updateDto);
   }
   @Patch('/update-password')
   @UseGuards(AuthGuard())
@@ -79,10 +91,9 @@ export class AuthController {
 
   @Post('/forgot-password')
   // @UseGuards(AuthGuard())
-  async forgotPassword(@Body('email') email : string): Promise<void> {
-    // const token = request.headers['authorization'].split(' ')[1];
-  
-    await this.authservice.sendPinCode(email);
+  async forgotPassword(@Body('email') email : string): Promise<User> {
+    const user = await this.authservice.sendPinCode(email);
+    return user ;
   }
   @Post('/reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<void> {
@@ -111,40 +122,72 @@ export class AuthController {
     return await this.authservice.getusers1();
   }
   
-  @Post('uploadImage')
-  @UseInterceptors(FileInterceptor('file' , {storage : diskStorage({
-    destination : './uploads',
-    filename : (req , file , cb)=>{
-      const name = file.originalname.split('.')[0];
-      const fileExtension = file.originalname.split('.')[1];
-      const newFileName = name.split("").join('-') + '-' + Date.now() + '.' + fileExtension;
-      cb(null , newFileName); 
-    }
-  }),
-  fileFilter :(req, file , cb) => {
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-      return cb(null , false);
-    }
-    cb(null, true);
-  }
-}))
-  uploadPhoto(@UploadedFile() file : Express.Multer.File) {
-    if(!file){
-      throw new BadRequestException('File not found');
-      }else{
-        const response = {
-          filePath : 'http://localhost:3000/posts/pictures/' + file.filename
-        };
-        return response ;
-      };
-    }
+
 
 @Get('pictures/:filename') 
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
 
+@Post(':personnelId')
+  async updateAttendanceList(
+    @Param('personnelId') personnelId: string,
+    @Body() attend: UpdateAttendanceDto[],
+  ): Promise<void> {
+    try {
+      await this.authservice.updateAttendanceList(personnelId, attend);
+    } catch (error) {
+      throw new NotFoundException("Impossible de mettre à jour la liste de présence.");
+    }
+  }
+
+@Post('uploadImage/:userId')
+@UseInterceptors(FileInterceptor('file', {
+  storage: diskStorage({
+    destination: './uploads',
+    filename: (req, file, cb) => {
+      const name = file.originalname.split('.')[0];
+      const fileExtension = file.originalname.split('.')[1];
+      const newFileName = name.split("").join('-') + '-' + Date.now() + '.' + fileExtension;
+      cb(null, newFileName);
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (!file.originalname.match(/\.(jpg|JPG|jpeg|png|gif)$/)) {
+      return cb(null, false);
+    }
+    cb(null, true);
+  }
+}))
+async uploadPhoto1(@UploadedFile() file: Express.Multer.File, @Param('userId') userId: string) {
+  const user = await this.userMosel.findById(userId);
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+  const filePath = 'http://localhost:3000/auth/pictures/' + file.filename;
+  user.profileImage = filePath;
+  
+  return user.save();
+}
+
+@Get(':userId')
+  async getAttendancesForUser(@Param('userId') userId: string): Promise<Attendance[]> {
+    const attendances = await this.authservice.getPersonnelWithAttendances(userId);
+    
+    if (!attendances || attendances.length === 0) {
+      throw new NotFoundException('No attendances found for the user');
+    }
+
+    return attendances;
+  }
+
+
+
+
+
 
 }
+
+
 
 

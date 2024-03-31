@@ -2,6 +2,7 @@ import {Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put} from
 import {AttendanceService} from "./attendance.service";
 import {UpdateEtatDto} from "./dto/Attendance.dto";
 import { Attendance } from './Schema/Attendance.schema';
+import { User } from 'src/auth/Shemas/User.shema';
 
 @Controller('attendance')
 export class AttendanceController {
@@ -40,5 +41,28 @@ export class AttendanceController {
             throw new HttpException('Une erreur s\'est produite lors du calcul des jours de présence et d\'absence.', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
+  @Get('currentWeek')
+  async getAllEmployeesWithAttendancesForCurrentWeek(): Promise<User[]> {
+    try {
+      return await this.attendanceService.getAllEmployeesWithAttendances();
+    } catch (error) {
+      throw new Error(`Unable to fetch users with attendances for current week: ${error.message}`);
+    }
+  }
+  @Get('list/:id')
+  async getUserWithAttendancesById(@Param('id') userId: string): Promise<User | null> {
+    try {
+      const userWithAttendances = await this.attendanceService.getEmployeeWithAttendancesById(userId);
+      return userWithAttendances;
+    } catch (error) {
+      throw new Error(`Unable to fetch user with attendances: ${error.message}`);
+    }
+  }
+  @Get("allusers")
+  async getAllUsersWithAttendances(): Promise<User[]> {
+    return await this.attendanceService.getUsersWithAttendances();
+  }
+
 
 }

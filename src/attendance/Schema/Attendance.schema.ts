@@ -8,14 +8,14 @@ export enum AttendanceStatus {
 }
 export enum Etat {
     pending    = 'Pending',
-    approuved = 'Approuved',
+    approuved = 'Approved',
     declined =  'Declined'
 }
 
 @Schema()
 export class Attendance extends Document {
 
-    @Prop({ required: true })
+    @Prop({ required: false })
     date: Date;
 
     @Prop( {required : false})

@@ -5,7 +5,6 @@ import {
     Injectable,
     InternalServerErrorException,
     NotFoundException,
-    Res,
     UnauthorizedException
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -23,6 +22,11 @@ import { Roleservice } from './Role.service';
 import {Attendance} from "../attendance/Schema/Attendance.schema";
 import {UpdateAttendanceDto} from "../attendance/dto/Attendance.dto";
 import { Role } from './Shemas/Roles.Shema';
+import { Observable, from, map, switchMap } from 'rxjs';
+import path from 'path';
+
+
+
 
 @Injectable()
 export class AuthService {
@@ -36,7 +40,7 @@ export class AuthService {
     ){}
    
     async signUp(signupDto: signupDto): Promise<{ token: string }> {
-      const { firstName, lastName , email, password, roleName , EmailSecondaire , TelSecondaire , dateEntree , Tel , Matricule  , soldeConges , soldeMaladie , fonction} = signupDto;
+      const { firstName, lastName , email, password, roleName , EmailSecondaire , TelSecondaire , dateEntree , Tel , Matricule  , soldeConges , soldeMaladie , fonction } = signupDto;
       const hashedPassword = await bcrypt.hash(password, 10);
       const role = await this.roleS.findRoleByName(roleName); 
       const savedRole= await role.save()
@@ -89,16 +93,19 @@ export class AuthService {
         role: user.role,
         id: user.id,
         firstname: user.firstName ,
-        lastname : user.lastName
+        lastname : user.lastName,
+        profileImage : user.profileImage
       };
 
       return { token, expiresIn, user: userData };
     }
 
-async findByIdWithRole(id: string): Promise<User> {
-  
+  async findByIdWithRole(id: string): Promise<User> {
   let test =  await this.userMosel.findById(id).populate('role');
-  console.log(test);
+  return test ;
+  }
+  async findById(id: string): Promise<User> {
+  let test =  await this.userMosel.findById(id).exec();
   return test ;
   }
 
@@ -137,21 +144,19 @@ async activateUser(userId: string): Promise<User> {
             deactivationMessage,
         );
     }
-
     return user;
 }
 
-  async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
-    const { name, email } = updateDto;
+async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
+  const updatedUser = await this.userMosel.findByIdAndUpdate(
+    userId,
+    updateDto,
+    { new: true },
+  );
 
-    const updatedUser = await this.userMosel.findByIdAndUpdate(
-      userId,
-      { name, email },
-      { new: true },
-    );
+  return updatedUser;
+}
 
-    return updatedUser;
-  }
   async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto): Promise<void> {
     const { oldPassword, newPassword } = updatePasswordDto;
 
@@ -166,31 +171,29 @@ async activateUser(userId: string): Promise<User> {
     user.password = hashedPassword;
     await user.save();
   }
+  updateOne(id: string, user: User): Observable<User> {
+    // Supprimer les champs que vous ne souhaitez pas mettre à jour
+    delete user.email;
+    delete user.password;
+    delete user.role;
 
-  async sendPinCode(email : string ): Promise<void> {
-    // const decodedToken :any = jwt.verify(token,'bahazaidi'); 
-    // const userId = decodedToken.id;
-  
-    // const user = await this.userMosel.findById(userId);
-  
-    // if (!user) {
-    //   throw new NotFoundException('Utilisateur non trouvé');
-    // }ch
+    // Utilisez findByIdAndUpdate pour mettre à jour le document
+    return from(this.userMosel.findByIdAndUpdate(id, user, { new: true }));
+  }
+
+  async sendPinCode(email : string ): Promise<User> {
     if(this.checkifemailvalid(email)){
-      let user = await this.userMosel.findOne({ email });
-  
+    let user = await this.userMosel.findOne({ email });
+    console.log(user);
     const pinCode = Math.floor(1000 + Math.random() * 9000).toString(); 
     user.pinCode = pinCode;
     await user.save();
-   
-
- 
-  
     await this.mailerService.sendEmail(
      email,
       'Code PIN de réinitialisation du mot de passe',
       `Votre code PIN de réinitialisation du mot de passe est : ${pinCode}`,
     );
+    return user ;
   }
   else {
     throw new BadRequestException('Email invalide');
@@ -202,19 +205,13 @@ async activateUser(userId: string): Promise<User> {
     if (!user) {
       throw new BadRequestException('Code PIN invalide');
     }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    user.password = newPassword;
+    user.password = hashedPassword;
     user.pinCode = null;
     await user.save();
   }
-//  async checkifadmin(token:string):Promise<boolean>{
-//   const decodedToken: any = jwt.verify(token, 'bahazaidi'); 
-//   const userId = decodedToken.id;
-//   const user = await this.findByIdWithRole(userId);
-//   const userRoles = user.role.map(role => role.name);
-//   return userRoles.includes('admin');
 
-//  }
  async checkifemailvalid(email:string):Promise<boolean>{
   const user=await this.userMosel.findOne({email});
   if(!user){return false;}
@@ -242,13 +239,26 @@ async activateUser(userId: string): Promise<User> {
         }
     }
 
-    async getPersonnelWithAttendances(idP : string): Promise<User> {
+    async getPersonnelWithAttendances1(idP : string): Promise<User> {
         const personnel = this.userMosel.findById(idP).populate(['attendances']);
         if (!personnel) {
             throw new NotFoundException('personnel not found');
         }
         return personnel ;
     }
+    
+    async getPersonnelWithAttendances(userId: string): Promise<Attendance[]> {
+      const user = await this.userMosel.findById(userId).populate('attendances').exec();
+      
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+    
+      return user.attendances;
+    }
+    
+
+  
     async getAttendaces(idp: string): Promise<Attendance[]> {
         const personnel = await this.userMosel.findById(idp).populate(['attendances']);
         return personnel.attendances;
@@ -275,4 +285,23 @@ async activateUser(userId: string): Promise<User> {
             }
         }
     }
+ 
+    async uploadProfileImage(userId: string, filename: string): Promise<User> {
+      const user = await this.userMosel.findById(userId);
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+      // Définissez le chemin complet du fichier en concaténant le chemin du dossier uploads avec le nom du fichier
+      const imagePath = path.join('uploads', filename);
+      // Attribuez le chemin complet du fichier à la propriété profileImage de l'utilisateur
+      user.profileImage = imagePath;
+      // Enregistrez les modifications dans la base de données
+      return await user.save();
+    }
+    
+    
+   
+  
+    
 }
+

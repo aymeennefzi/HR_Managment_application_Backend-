@@ -22,7 +22,7 @@ import {Attendance} from "../../attendance/Schema/Attendance.schema";
       @Prop()
       password: string;
 
-      @Prop({ default: true })
+      @Prop({ default: false })
       isActive: boolean;
 
       @Prop({ type: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' }})
@@ -68,7 +68,32 @@ import {Attendance} from "../../attendance/Schema/Attendance.schema";
       @Prop({nullable: true})
       profileImage: string;
 
+      @Prop()
+      location : string ;
 
+      @Prop()
+      city : string ;
+      
+      @Prop()
+      adresse : string ;
+      
+      @Prop()
+      country : string ;
+      
+      @Prop()
+      aboutme : string ;
+      
+      @Prop()
+      education : string ;
+      
+      @Prop()
+      experience : string ;
+      
+      @Prop()
+      skills : string ;
+      
+      @Prop()
+      datebirth : string ;
   }
 
     export const  UserSchema=SchemaFactory.createForClass(User);

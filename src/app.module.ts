@@ -9,6 +9,7 @@ import { DepartementsModule } from './departements/departements.module';
 import { EntreprisesModule } from './entreprises/entreprises.module';
 import { ProjectModule } from './project/project.module';
 import {AttendanceModule} from "./attendance/attendance.module";
+import { HolidaysModule } from './holidays/holidays.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import {AttendanceModule} from "./attendance/attendance.module";
       DepartementsModule,
       EntreprisesModule,
       ProjectModule,
-      AttendanceModule
+      AttendanceModule,
+      HolidaysModule
     
       
 
