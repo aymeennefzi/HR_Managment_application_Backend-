@@ -16,6 +16,8 @@ import { MulterConfigModule } from './multer-config/multer-config.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { SkillModule } from './jobs/skill/skill.module';
+import { TeamsModule } from './teams/teams.module';
+import { PerformanceModule } from './performance/performance.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { SkillModule } from './jobs/skill/skill.module';
       ProjectModule,
       AttendanceModule,
       JobModule,
+ TeamsModule,
+      PerformanceModule,
       ApplicationModule,
       MulterModule.register({
         dest: './uploads', // Répertoire de destination pour stocker les fichiers téléchargés

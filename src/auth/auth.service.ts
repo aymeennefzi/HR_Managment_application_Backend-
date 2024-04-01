@@ -275,4 +275,21 @@ async activateUser(userId: string): Promise<User> {
             }
         }
     }
+    getUserById(id:string){
+      return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
+  }
+  async findUserByTaskId(taskId: string): Promise<User> {
+    const user = await this.userMosel.findOne({ tasks: taskId }).exec();
+    if (!user) {
+      throw new NotFoundException('User with the given task ID not found');
+    }
+    return user;
+  }
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.userMosel.findOne({ email }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
 }

@@ -5,7 +5,7 @@ import { Model, Types } from 'mongoose';
 import { Job, JobSchema } from '../schemas/job.schema';
 import * as fs from 'fs';
 import { UpdateApplicationDto } from './dto/UpdateApplication.dto';
-import { Logger } from 'sass';
+
 import { UpdateDepartmentDto } from 'src/departements/dto/UpdateDepartements.dto';
 
 

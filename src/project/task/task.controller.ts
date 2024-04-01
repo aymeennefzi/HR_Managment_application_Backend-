@@ -20,7 +20,7 @@ export class TaskController {
    @Get('/:id')
    async getTaskById(@Param('id') id:string){
    const isValid= mongoose.Types.ObjectId.isValid(id)
-   if(!isValid) throw new HttpException('task not found',404) 
+   if(!isValid) throw new HttpException('task id not found',404) 
     const findTask= await this. taskService.getTaskById(id);
     if(!findTask) throw new HttpException('task not found',404)
     return findTask;

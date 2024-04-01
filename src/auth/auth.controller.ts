@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpException, NotFoundException, Param, Patch, Post, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { signupDto } from './dto/signupDto';
 import { loginDto } from './dto/login.dto';
@@ -12,6 +12,7 @@ import { ResetPasswordDto } from './dto/ResetPasswordDto';
 import { Role } from './Shemas/Roles.Shema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import mongoose from 'mongoose';
 
 @Controller('auth')
 export class AuthController {
@@ -143,7 +144,29 @@ export class AuthController {
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
+@Post('user-by-task')
 
+async getUserByTaskId(@Body('taskId') taskId: string) {
+  // Appel au service pour obtenir l'utilisateur en fonction de l'ID de la tâche
+  return await this.authservice.findUserByTaskId(taskId);
+}
+@Get('/:id')
+async getUserById(@Param('id') id:string){
+const isValid= mongoose.Types.ObjectId.isValid(id)
+if(!isValid) throw new HttpException('task id not found',404) 
+ const findUser= await this. authservice.getUserById(id);
+ if(!findUser) throw new HttpException('task not found',404)
+ return findUser;
+}
+@Get('/email/:email')
+async findByEmail(@Param('email') email: string) {
+  try {
+    const user = await this.authservice.findByEmail(email);
+    return user;
+  } catch (error) {
+    throw new NotFoundException(error.message);
+  }
+}
 
 }
 

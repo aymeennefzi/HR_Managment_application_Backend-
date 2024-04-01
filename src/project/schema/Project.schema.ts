@@ -1,6 +1,12 @@
 import { Prop, Schema, SchemaFactory  } from "@nestjs/mongoose";
-import mongoose  from "mongoose";
+import mongoose from "mongoose";
+import { User } from "src/auth/Shemas/User.shema";
 import { Tasks } from "./Tasks.schema";
+export enum TypeStatutProjet {
+  New= 0,
+  RUNNING = 1,
+  FINISHED  = 3,
+}
 
 
 
@@ -11,29 +17,50 @@ NomProject:string;
 @Prop()
 description:string;
 @Prop()
-StartDate:string;
+StartDate?:string;
 @Prop()
 FinishDate?:string;
-@Prop()
+@Prop({
+     
+  default: TypeStatutProjet.New
+})
  statut?:TypeStatutProjet;
  @Prop()
  projectUrl?: string;
-@Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Tasks }] })
-tasks:Tasks []; 
+@Prop([{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Tasks }] )
+tasks:Tasks[]; 
 @Prop()
  NomChefProjet?:string
 @Prop()
-priority?:string;
+priority?:ProjectPriority;
+@Prop()
+progress?:number
+@Prop()
+type?:ProjectType
+@Prop({type:mongoose.Schema.Types.ObjectId,ref:'User'})
+User?:User;
 }
 export const ProjectSchema= SchemaFactory.createForClass(Project)
-export enum TypeStatutProjet {
-    NOUVEAU = 'nouveau',
-    EN_COURS = 'en_cours',
-    TERMINE = 'termine',
-  }
-  
+
   export enum TypeStatutTache {
-    A_FAIRE = 'à faire',
-    EN_COURS = 'en_cours',
-    TERMINE = 'termine',
+    A_FAIRE = 'To Do',
+    RUNNING = 'RUNNING',
+    FINISHED  = 'FINISHED',
+  }
+  export enum ProjectPriority {
+    LOW = -1,
+    MEDIUM = 0,
+    HIGH = 1,
+  }
+  export enum TaskPriority {
+    LOW = 'low',
+    MEDIUM = 'medium',
+    HIGH = 'high',
+  }
+  export enum ProjectType {
+    WEB = 'Website',
+    ANDROID = 'Android',
+    IPHONE = 'IPhone',
+    TESTING = 'Testing',
+    otherType='other type'
   }
