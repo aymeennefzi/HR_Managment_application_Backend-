@@ -3,8 +3,8 @@ import {InjectModel} from '@nestjs/mongoose'
 import {Model} from 'mongoose'
 import {CreateLeaveDto} from "./dto/createConge.dto";
 import {Leave, TimeOfDay} from "./Schema/Leaves.schema";
-import {AuthService} from "../auth/auth.service";
 import {User} from "../auth/Shemas/User.shema";
+import { AuthService } from "src/auth/auth.service";
 
 @Injectable()
 export class CongeService {

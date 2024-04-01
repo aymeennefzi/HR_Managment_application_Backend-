@@ -2,7 +2,7 @@ import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { CreateProjectDto, CreateTasksDto } from '../dto/CreateProject.dto';
+import { CreateTasksDto } from '../dto/CreateProject.dto';
 import { Project } from '../schema/Project.schema';
 import { Tasks } from '../schema/Tasks.schema';
 import { User } from 'src/auth/Shemas/User.shema';
@@ -65,7 +65,6 @@ async deleteTask(id: string) {
       // Handle the case where the task does not exist.
       return null;
     }
-  
     await this.projectModel.updateMany(
       {}, // This empty filter matches all documents in the collection.
       { $pull: { tasks: deletedTask._id } } // Pull the deleted task's ID from the tasks array.
