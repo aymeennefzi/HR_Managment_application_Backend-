@@ -1,40 +1,44 @@
-import { Exclude } from "class-transformer";
-import { IsBoolean, IsDate, IsDateString, IsNotEmpty,IsOptional,IsString, Matches, ValidateNested } from "class-validator";
-import { Date } from "mongoose";
-import { TypeStatutProjet, TypeStatutTache } from "../schema/Project.schema";
+import { Exclude, Type } from "class-transformer";
+import { IsBoolean, IsDate, IsDateString, IsEnum, IsNotEmpty,IsOptional,IsString, Matches, ValidateNested } from "class-validator";
+import { CreatePerformanceDto } from "src/performance/dto/CreatePerformance.dto";
+
+import { ProjectPriority, ProjectType, TaskPriority, TypeStatutProjet, TypeStatutTache } from "../schema/Project.schema";
 
 export class CreateTasksDto{
 
     
 @IsNotEmpty()
-@IsOptional()
+
 @IsString()
 NomTask:string;
 @IsOptional()
 @IsString()
 description?:string;
 @IsOptional()
-@IsString()
-  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
-    message: 'startDate must be in the format DD/MM/YYYY'
-  })
+@IsDate()
+@Type(() => Date)
 startDate?:Date;
 @IsOptional()
-@IsString()
-  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
-    message: 'FinishDate must be in the format DD/MM/YYYY'
-  })
+@IsDate()
+@Type(() => Date)
 FinishDate?:Date
+/* @IsDate()
+@Type(() => Date)
+statusChangedDate?:Date */
 @IsOptional()
-@IsString()
+@IsEnum(TypeStatutTache)
 statut?:TypeStatutTache;
-@IsNotEmpty()
+@IsOptional()
 projectId:string;
 @IsOptional()
-@IsString()
- priority?:string;
- @IsNotEmpty()
+@IsEnum(TaskPriority)
+ priority?:TaskPriority;
+ @IsOptional()
  employeeAffected:string;
+ @IsOptional()
+ @ValidateNested()
+performances: [CreatePerformanceDto]; 
+
   }
   export class CreateUserDto{
     
@@ -56,9 +60,13 @@ projectId:string;
    role: string;
    @IsOptional()
    @ValidateNested()
-  tasks?: CreateTasksDto; 
-    
-   }
+  tasks: [CreateTasksDto]; 
+  @IsOptional()
+  TeamId:string;
+  @IsOptional()
+  @ValidateNested()
+ projects: [CreateProjectDto]; 
+    }
 export class CreateProjectDto{
     
 
@@ -69,20 +77,20 @@ NomProject:string;
 @IsString()
 description?:string;
 @IsOptional()
-@IsString()
-  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
-    message: 'startDate must be in the format DD/MM/YYYY'
-  })
-StartDate?:Date;
+
+@Matches(/^\d{2}-\d{2}-\d{4}$/, {
+  message: 'startDate must be in the format DD-MM-YYYY'
+})
+StartDate?:string;
 @IsOptional()
-@IsString()
-  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
-    message: 'FinishDate must be in the format DD/MM/YYYY'
-  })
-FinishDate?:Date;
+
+@Matches(/^\d{2}-\d{2}-\d{4}$/, {
+  message: 'FinishDate must be in the format DD-MM-YYYY'
+})
+FinishDate?:string;
 @IsOptional()
-@IsString()
- statut?:TypeStatutProjet
+@IsEnum(TypeStatutProjet)
+ statut?:TypeStatutProjet=TypeStatutProjet.New
  @IsOptional()
  @IsString()
  projectUrl?: string;
@@ -93,7 +101,13 @@ tasks: [CreateTasksDto];
 @IsString()
  NomChefProjet?:string
  @IsOptional()
-@IsString()
- priority?:string;
-
+@IsEnum(ProjectPriority)
+priority?:ProjectPriority;
+@IsOptional()
+progress?:number
+@IsOptional()
+@IsEnum(ProjectType)
+type?:ProjectType
+@IsOptional()
+UserProjectsId:string;
 }

@@ -1,6 +1,5 @@
 import {
     BadRequestException,
-    Body,
     HttpException,
     Injectable,
     InternalServerErrorException,
@@ -22,7 +21,7 @@ import { Roleservice } from './Role.service';
 import {Attendance} from "../attendance/Schema/Attendance.schema";
 import {UpdateAttendanceDto} from "../attendance/dto/Attendance.dto";
 import { Role } from './Shemas/Roles.Shema';
-import { Observable, from, map, switchMap } from 'rxjs';
+import { Observable, from } from 'rxjs';
 import path from 'path';
 
 
@@ -145,39 +144,32 @@ async activateUser(userId: string): Promise<User> {
         );
     }
     return user;
-}
+  }
 
-async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
-  const updatedUser = await this.userMosel.findByIdAndUpdate(
-    userId,
-    updateDto,
-    { new: true },
-  );
+  async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
+    const updatedUser = await this.userMosel.findByIdAndUpdate(
+      userId,
+      updateDto,
+      { new: true },
+    );
 
-  return updatedUser;
-}
-
+    return updatedUser;
+  }
   async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto): Promise<void> {
     const { oldPassword, newPassword } = updatePasswordDto;
-
     const user = await this.userMosel.findById(userId);
-
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
       throw new BadRequestException('Le mot de passe actuel est incorrect.');
     }
-
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
   }
   updateOne(id: string, user: User): Observable<User> {
-    // Supprimer les champs que vous ne souhaitez pas mettre à jour
     delete user.email;
     delete user.password;
     delete user.role;
-
-    // Utilisez findByIdAndUpdate pour mettre à jour le document
     return from(this.userMosel.findByIdAndUpdate(id, user, { new: true }));
   }
 
@@ -201,32 +193,27 @@ async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
   }
   async resetPassword(newPassword: string, pinCode: string): Promise<void> {
     const user = await this.userMosel.findOne({ pinCode });
-
     if (!user) {
       throw new BadRequestException('Code PIN invalide');
     }
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
     user.password = hashedPassword;
     user.pinCode = null;
     await user.save();
-  }
-
- async checkifemailvalid(email:string):Promise<boolean>{
-  const user=await this.userMosel.findOne({email});
-  if(!user){return false;}
-  return true;
- }
- async getAllUsers(): Promise<User[]> {
-  return this.userMosel.find().exec();
-}
- async getUserByToken(token:string):Promise<User>{
-  const decodedToken:any =jwt.verify(token,'bahazaidi') ;
-  const user = await this.userMosel.findOne({ _id:decodedToken.id })
-  return user;
- }
- 
-
+    }
+    async checkifemailvalid(email:string):Promise<boolean>{
+      const user=await this.userMosel.findOne({email});
+      if(!user){return false;}
+      return true;
+    }
+    async getAllUsers(): Promise<User[]> {
+    return this.userMosel.find().exec();
+    }
+    async getUserByToken(token:string):Promise<User>{
+      const decodedToken:any =jwt.verify(token,'bahazaidi') ;
+      const user = await this.userMosel.findOne({ _id:decodedToken.id })
+      return user;
+    }
     async getSoldesConges(id : string): Promise<number>{
         try {
             const personnel = await this.userMosel.findById(id);
@@ -238,15 +225,13 @@ async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
             throw new InternalServerErrorException('Erreur lors de la récuperation du solde de congés')
         }
     }
-
     async getPersonnelWithAttendances1(idP : string): Promise<User> {
         const personnel = this.userMosel.findById(idP).populate(['attendances']);
         if (!personnel) {
             throw new NotFoundException('personnel not found');
         }
         return personnel ;
-    }
-    
+    }  
     async getPersonnelWithAttendances(userId: string): Promise<Attendance[]> {
       const user = await this.userMosel.findById(userId).populate('attendances').exec();
       
@@ -256,9 +241,6 @@ async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
     
       return user.attendances;
     }
-    
-
-  
     async getAttendaces(idp: string): Promise<Attendance[]> {
         const personnel = await this.userMosel.findById(idp).populate(['attendances']);
         return personnel.attendances;
@@ -285,7 +267,6 @@ async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
             }
         }
     }
- 
     async uploadProfileImage(userId: string, filename: string): Promise<User> {
       const user = await this.userMosel.findById(userId);
       if (!user) {
@@ -298,10 +279,22 @@ async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
       // Enregistrez les modifications dans la base de données
       return await user.save();
     }
-    
-    
-   
-  
-    
+    // getUserById(id:string){
+    //   return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
+    // }
+    // async findUserByTaskId(taskId: string): Promise<User> {
+    //     const user = await this.userMosel.findOne({ tasks: taskId }).exec();
+    //     if (!user) {
+    //         throw new NotFoundException('User with the given task ID not found');
+    //     }
+    //     return user;
+    // }
+    // async findByEmail(email: string): Promise<User> {
+    //     const user = await this.userMosel.findOne({ email }).exec();
+    //     if (!user) {
+    //     throw new NotFoundException('User not found');
+    //     }
+    //     return user;
+    // }
 }
 

@@ -217,4 +217,31 @@ export class CongeService {
           leaves: user.leaves,
         }));
       }
+      async ifLeave(dateLeave: string, personalId: string): Promise<boolean> {
+        const leaves = await this.getLeaves(personalId);
+        const leaveDate = dateLeave;
+        for (const leave of leaves) {
+            const startDate = leave.startDate;
+            const endDate =leave.endDate;
+            console.log(leaveDate + "#" , startDate  + "#" , endDate);
+
+            if (leaveDate >= startDate && leaveDate <= endDate) {
+                return true; 
+            }
+        }
+        return false;
+    }
+    async getLeaves(personalId: string): Promise<Leave[]> {
+        try {
+            const personal = await this.personnelModel
+                .findById(personalId)
+                .populate('leaves')
+                .exec();
+
+            const personalLeaves = personal?.leaves ?? [];
+            return personalLeaves;
+        } catch (error) {
+            throw new Error('Une erreur s\'est produite lors de la récupération des congés.');
+        }
+    }
 }

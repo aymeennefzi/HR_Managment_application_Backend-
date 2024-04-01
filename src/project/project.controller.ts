@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post, Sse, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post, Query, Sse, UsePipes, ValidationPipe } from '@nestjs/common';
 import mongoose from 'mongoose';
 
 import { CreateProjectDto } from './dto/CreateProject.dto';
 import { ProjectService } from './project.service';
+import { Project, TypeStatutProjet } from './schema/Project.schema';
 
 @Controller('project')
 export class ProjectController {
@@ -21,9 +22,9 @@ export class ProjectController {
    @Get('/:id')
    async getProjectById(@Param('id') id:string){
    const isValid= mongoose.Types.ObjectId.isValid(id)
-   if(!isValid) throw new HttpException('user not found',404) 
+   if(!isValid) throw new HttpException('project id is not valid not found',404) 
     const findUser= await this. projectService.getProjectById(id);
-    if(!findUser) throw new HttpException('user not found',404)
+    if(!findUser) throw new HttpException('project not found',404)
     return findUser;
    }
    @Patch(':id')
@@ -43,4 +44,24 @@ async deleteProject(@Param('id') id:string){
  console.log(deletedEntreprise)
 
 }
+@Patch(':id/statut')
+async updateStatut(
+  @Param('id') id: string,
+  @Body('statut') statut: TypeStatutProjet,
+): Promise<Project> {
+  return this.projectService.updateStatut(id, statut);
+}
+ @Post('/by-tasks/jj')
+
+ async getProjectsByTaskIds(@Body('taskIds') taskIds:  string[]) {
+   // Ensure taskIds is treated as an array, whether it comes as a single string or an array of strings
+  
+   
+   try {
+     const projects = await this.projectService.findProjectsByTaskIds(taskIds);
+     return projects;
+   } catch (error) {
+     throw error;
+   }
+ }
 }

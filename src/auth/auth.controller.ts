@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Put, Req, Request, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {  Body, Controller, Get, NotFoundException, Param, Patch, Post, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { signupDto } from './dto/signupDto';
 import { loginDto } from './dto/login.dto';
@@ -7,20 +7,15 @@ import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateProfileDto } from './dto/UpdateProfileDto';
 import { UpdatePasswordDto } from './dto/UpdatePasswordDto';
-import { ForgotPasswordDto } from './dto/ForgotPasswordDto';
 import { ResetPasswordDto } from './dto/ResetPasswordDto';
 import { Role } from './Shemas/Roles.Shema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { UpdateAttendanceDto } from 'src/attendance/dto/Attendance.dto';
-import * as fs from 'fs';
-import axios from 'axios';
-import { Observable, catchError, map } from 'rxjs';
-
-import { join } from 'path';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Attendance } from 'src/attendance/Schema/Attendance.schema';
+import mongoose from 'mongoose';
 
 @Controller('auth')
 export class AuthController {
@@ -128,6 +123,8 @@ export class AuthController {
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
+@Post('user-by-task')
+
 
 @Post(':personnelId')
   async updateAttendanceList(
@@ -185,6 +182,28 @@ async uploadPhoto1(@UploadedFile() file: Express.Multer.File, @Param('userId') u
 
 
 
+
+// async getUserByTaskId(@Body('taskId') taskId: string) {
+//   // Appel au service pour obtenir l'utilisateur en fonction de l'ID de la tâche
+//   return await this.authservice.findUserByTaskId(taskId);
+// }
+// @Get('/:id')
+// async getUserById(@Param('id') id:string){
+// const isValid= mongoose.Types.ObjectId.isValid(id)
+// if(!isValid) throw new HttpException('task id not found',404)
+//  const findUser= await this. authservice.getUserById(id);
+//  if(!findUser) throw new HttpException('task not found',404)
+//  return findUser;
+// }
+// @Get('/email/:email')
+// async findByEmail(@Param('email') email: string) {
+//   try {
+//     const user = await this.authservice.findByEmail(email);
+//     return user;
+//   } catch (error) {
+//     throw new NotFoundException(error.message);
+//   }
+// }
 
 }
 

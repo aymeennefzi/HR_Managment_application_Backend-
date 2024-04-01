@@ -9,7 +9,15 @@ import { DepartementsModule } from './departements/departements.module';
 import { EntreprisesModule } from './entreprises/entreprises.module';
 import { ProjectModule } from './project/project.module';
 import {AttendanceModule} from "./attendance/attendance.module";
-import { HolidaysModule } from './holidays/holidays.module';
+import { JobModule } from './jobs/job/job.module';
+import { ApplicationModule } from './jobs/application/application.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { MulterConfigModule } from './multer-config/multer-config.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { SkillModule } from './jobs/skill/skill.module';
+import { TeamsModule } from './teams/teams.module';
+import { PerformanceModule } from './performance/performance.module';
 
 @Module({
   imports: [
@@ -24,7 +32,18 @@ import { HolidaysModule } from './holidays/holidays.module';
       EntreprisesModule,
       ProjectModule,
       AttendanceModule,
-      HolidaysModule
+      JobModule,
+ TeamsModule,
+      PerformanceModule,
+      ApplicationModule,
+      MulterModule.register({
+        dest: './uploads', 
+      }),
+      MulterConfigModule,
+      ServeStaticModule.forRoot({
+        rootPath: join(__dirname, '..', 'uploads'), 
+      }),
+      SkillModule
     
       
 
