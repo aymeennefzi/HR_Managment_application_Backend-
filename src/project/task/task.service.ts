@@ -111,13 +111,12 @@ async deleteTask(id: string) {
   }
   async checkAndRemoveUserFromTask() {
     const users = await this.userModel.find();
-    
+
     for (const user of users) {
       const tasks = await this.taskModel.find({ employeeAffected: user._id });
-      
-      for (const task of tasks) {   
-        const finishDate = DateTime.fromFormat(task.FinishDate,'dd/MM/yyyy').toJSDate();   
 
+      for (const task of tasks) {
+        const finishDate = DateTime.fromFormat(task.FinishDate,'dd/MM/yyyy').toJSDate();
         if (task.FinishDate && finishDate <= new Date()) {
 
             task.User = null;

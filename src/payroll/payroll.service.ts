@@ -1,17 +1,14 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { CreateUserPostDto } from './post/dto/CreatePost.dto';
-import { CreatePayrollDto, EmployeeSalaryDto } from './dto/CreatePayroll.dto';
+import { Model } from 'mongoose';
+import { CreatePayrollDto } from './dto/CreatePayroll.dto';
 import { PaymentP } from 'src/payment-policy/Schema/PaymentPolicyschema';
 import { Payroll } from './Schema/Payroll.schema';
 import { Poste } from './Schema/Poste.schema';
 import { User } from 'src/auth/Shemas/User.shema';
 import { AttendanceService } from 'src/attendance/attendance.service';
 import { AuthService } from 'src/auth/auth.service';
-import path from 'path';
 import { PaymentPolicyService } from 'src/payment-policy/payment-policy.service';
-import { Leave, LeaveType } from 'src/conges/Schema/Leaves.schema';
 import { CongeService } from 'src/conges/Conge.service';
 import { Cron } from '@nestjs/schedule';
 

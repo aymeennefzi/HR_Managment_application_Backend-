@@ -14,8 +14,11 @@ export  class Tasks{
     description:string;
     @Prop()
     startDate:Date;
+    // Changed finish date to string by Aymen because it caused an error in the function checkAndRemoveUserFromTask since the date format parameter takes a string type and not a date type.
     @Prop()
-    FinishDate?:Date
+    FinishDate?:string
+    // @Prop()
+    // FinishDate?:Date
     @Prop()
     statut?:TypeStatutTache
     @Prop({type:mongoose.Schema.Types.ObjectId,ref:'Project'})
