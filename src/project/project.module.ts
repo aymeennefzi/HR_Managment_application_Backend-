@@ -16,6 +16,8 @@ import { MailerService } from 'src/auth/Mail.service';
 import { Roleservice } from 'src/auth/Role.service';
 import { Attendance, AttendanceSchema } from 'src/attendance/Schema/Attendance.schema';
 import { Role, RoleSchema } from 'src/auth/Shemas/Roles.Shema';
+import { NotificationService } from 'src/notification/notification.service';
+import { Notification, NotificationSchema } from 'src/notification/notification.schema';
 
 @Module({
   imports:[MongooseModule.forFeature([
@@ -25,10 +27,12 @@ import { Role, RoleSchema } from 'src/auth/Shemas/Roles.Shema';
     { name: Leave.name, schema: LeaveSchema},
     { name: Attendance.name, schema: AttendanceSchema},
     { name: Role.name, schema: RoleSchema},
+    { name: Notification.name, schema: NotificationSchema},
+
   
   ]),],
   controllers: [ProjectController, TaskController],
-  providers: [ProjectService, TaskService,CongeService,AuthService,JwtService,MailerService,Roleservice],
+  providers: [ProjectService, TaskService,CongeService,AuthService,JwtService,MailerService,Roleservice , NotificationService],
   exports:[ProjectService]
 })
 export class ProjectModule {}

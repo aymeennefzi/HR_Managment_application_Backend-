@@ -129,6 +129,40 @@ export class AttendanceService {
             return [];
         }
     }
+
+
+    async getApprovedAttendancesSalaire(personnelId: string, startDate: Date, endDate: Date): Promise<Attendance[]> {
+        try {
+            const attendanceList = await this.authService.getAttendaces(personnelId); // Assurez-vous que getAttendaces accepte les paramètres de date
+    
+            console.log("Attendance List:", attendanceList);
+            console.log("Start Date:", startDate);
+            console.log("End Date:", endDate);
+    
+            console.log("après if");
+            const ApprovedAttendances: Attendance[] = [];
+           
+
+    for (const attendance of attendanceList) {
+        const attendanceDate = new Date(attendance.date);
+        const newEndDate = new Date(endDate);
+        newEndDate.setHours(23, 59, 59, 999);
+        const newStartDate = new Date(startDate);
+        newStartDate.setHours(23, 59, 59, 999);
+        console.log(attendanceDate)
+        console.log(attendanceDate >= startDate)
+    if (attendance.etat != Etat.pending && attendanceDate >= newStartDate && attendanceDate <= newEndDate) {
+        ApprovedAttendances.push(attendance);
+    }
+            }
+
+            console.log(ApprovedAttendances)
+            return ApprovedAttendances;
+            
+        } catch (error) {
+            console.log('Une erreur s\'est produite lors de la récupération de la liste des présences :', error);
+            return [];
+        }}
     async validatePresence(personnelId: string, attend: UpdateEtatDto[]): Promise<void> {
         console.log(attend);
         const attendanceList = await this.getNotApprovedAttendances(personnelId);
@@ -219,5 +253,31 @@ export class AttendanceService {
         }
     }
       
-    
+    async calculateAttendanceDaysSalaire(personalId: string, startDate: Date, endDate: Date): Promise<{ presentDays: number; absentDays: number }> {
+        let presentDays = 0;
+        let absentDays = 0;
+        let attendanceList =  await this.getApprovedAttendancesSalaire(personalId, startDate, endDate);
+        console.log('attendance',attendanceList)
+        for (const attendance of attendanceList) {
+            // Vérifier si l'état de l'assiduité est "Approuvé"
+            if (attendance.etat === 'Approved') {
+                // Incrémenter le nombre de jours présents en fonction du statut
+                if (attendance.status === 1) {
+                    presentDays++;
+                } else if (attendance.status === 0.5) {
+                    presentDays += 0.5;
+                    absentDays  += 0.5;
+                }
+                else if (attendance.status === 0) {
+                    absentDays += 1;
+                }
+
+            } else if (attendance.etat === 'Declined') {
+                // Si l'assiduité est rejetée, incrémenter le nombre de jours absents
+                absentDays++;
+            }
+        }
+       
+        return { presentDays, absentDays };
+    }
 }

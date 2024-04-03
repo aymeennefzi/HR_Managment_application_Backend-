@@ -18,40 +18,43 @@ import { join } from 'path';
 import { SkillModule } from './jobs/skill/skill.module';
 import { TeamsModule } from './teams/teams.module';
 import { PerformanceModule } from './performance/performance.module';
-import { MissionModule } from './mission/mission.module';
-import { NotificationModule } from './notification/notification.module';
-import { HolidaysModule } from './holidays/holidays.module';
+import { PaymentPolicyModule } from './payment-policy/payment-policy.module';
+import { PayrollModule } from './payroll/payroll.module';
+import {HolidaysModule} from "./holidays/holidays.module";
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      envFilePath: '.env',
-      isGlobal: true,
-    }),
-    MongooseModule.forRoot(process.env.DB_URI),
-    AuthModule,
-      CongesModule,
-      DepartementsModule,
-      EntreprisesModule,
-      ProjectModule,
-      AttendanceModule,
-      JobModule,
-      TeamsModule,
-      MissionModule,
-      PerformanceModule,
-      ApplicationModule,
-      MulterModule.register({
-        dest: './uploads', 
-      }),
-      MulterConfigModule,
-      ServeStaticModule.forRoot({
-        rootPath: join(__dirname, '..', 'uploads'), 
-      }),
-      SkillModule,
-      NotificationModule,
-      HolidaysModule
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({
+            envFilePath: '.env',
+            isGlobal: true,
+        }),
+        MongooseModule.forRoot(process.env.DB_URI),
+        AuthModule,
+        CongesModule,
+        DepartementsModule,
+        EntreprisesModule,
+        ProjectModule,
+        AttendanceModule,
+        JobModule,
+        TeamsModule,
+        PerformanceModule,
+        ApplicationModule,
+        MulterModule.register({
+            dest: './uploads',
+        }),
+        MulterConfigModule,
+        ServeStaticModule.forRoot({
+            rootPath: join(__dirname, '..', 'uploads'),
+        }),
+        SkillModule,
+        HolidaysModule,
+        PaymentPolicyModule,
+        PayrollModule,
+
+
+
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}
