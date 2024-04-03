@@ -18,6 +18,9 @@ import { join } from 'path';
 import { SkillModule } from './jobs/skill/skill.module';
 import { TeamsModule } from './teams/teams.module';
 import { PerformanceModule } from './performance/performance.module';
+import { MissionModule } from './mission/mission.module';
+import { NotificationModule } from './notification/notification.module';
+import { HolidaysModule } from './holidays/holidays.module';
 
 @Module({
   imports: [
@@ -33,7 +36,8 @@ import { PerformanceModule } from './performance/performance.module';
       ProjectModule,
       AttendanceModule,
       JobModule,
- TeamsModule,
+      TeamsModule,
+      MissionModule,
       PerformanceModule,
       ApplicationModule,
       MulterModule.register({
@@ -43,10 +47,9 @@ import { PerformanceModule } from './performance/performance.module';
       ServeStaticModule.forRoot({
         rootPath: join(__dirname, '..', 'uploads'), 
       }),
-      SkillModule
-    
-      
-
+      SkillModule,
+      NotificationModule,
+      HolidaysModule
   ],
   controllers: [AppController],
   providers: [AppService],
