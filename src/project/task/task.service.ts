@@ -116,7 +116,7 @@ async deleteTask(id: string) {
       const tasks = await this.taskModel.find({ employeeAffected: user._id });
       
       for (const task of tasks) {   
-        const finishDate = DateTime.fromFormat(task.FinishDate, 'dd/MM/yyyy').toJSDate();   
+        const finishDate = DateTime.fromFormat(task.FinishDate,'dd/MM/yyyy').toJSDate();   
 
         if (task.FinishDate && finishDate <= new Date()) {
 

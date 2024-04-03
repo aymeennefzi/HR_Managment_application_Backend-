@@ -18,6 +18,8 @@ import { join } from 'path';
 import { SkillModule } from './jobs/skill/skill.module';
 import { TeamsModule } from './teams/teams.module';
 import { PerformanceModule } from './performance/performance.module';
+import { PaymentPolicyModule } from './payment-policy/payment-policy.module';
+import { PayrollModule } from './payroll/payroll.module';
 
 @Module({
   imports: [
@@ -43,7 +45,9 @@ import { PerformanceModule } from './performance/performance.module';
       ServeStaticModule.forRoot({
         rootPath: join(__dirname, '..', 'uploads'), 
       }),
-      SkillModule
+      SkillModule,
+      PaymentPolicyModule,
+      PayrollModule,
     
       
 

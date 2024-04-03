@@ -1,11 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
 import { Role } from './Roles.Shema';
 import {Leave} from "../../conges/Schema/Leaves.schema";
 import {Attendance} from "../../attendance/Schema/Attendance.schema";
 import { Tasks } from 'src/project/schema/Tasks.schema';
 import { Teams } from 'src/teams/schema/Teams.schema';
 import { Project } from 'src/project/schema/Project.schema';
+import { Poste } from 'src/payroll/Schema/Poste.schema';
+import { Payroll } from 'src/payroll/Schema/Payroll.schema';
 
 
 
@@ -105,6 +107,12 @@ import { Project } from 'src/project/schema/Project.schema';
       
       @Prop()
       datebirth : string ;
+      @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Poste' })
+      poste: Poste ; // Déclaration de poste comme étant de type Poste ou de type mongoose.Types.ObjectId
+  
+    
+      @Prop({ type: [{ type: Types.ObjectId, ref: 'Payroll' }] })
+      payrolls: Payroll[];
   }
 
     export const  UserSchema=SchemaFactory.createForClass(User);
