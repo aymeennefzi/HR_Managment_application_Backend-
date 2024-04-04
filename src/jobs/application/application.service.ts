@@ -58,8 +58,7 @@ export class ApplicationService {
             throw new Error('Vous avez déjà postulé pour ce job.');
         }
     
-            // Créer une nouvelle instance de candidature avec les données et le chemin du fichier
-            // const newApplication = new this.applicationmodel({
+           
                 const newApplication  = new this.applicationmodel({
 
                 jobId: applicationData.jobId,
@@ -71,7 +70,14 @@ export class ApplicationService {
             console.log('Saving application:', newApplication);
             const savedApplication = await newApplication.save();
 
-            await this.applyForJobAndNotify(applicationData, filePath);
+            // await this.applyForJobAndNotify(applicationData, filePath);
+            const googleFormsLink = 'https://docs.google.com/forms/d/e/1FAIpQLSdK4jHnnXSfSMxGdVlWxr4Vtsr-5kduzoWhbj-WWLpkwDDwcA/viewform?usp=sf_link';
+               
+            // Construisez le contenu de l'e-mail à envoyer au candidat
+            const emailSubject = 'Votre candidature a été acceptée';
+            const emailBody = `Félicitations ! Votre candidature a été acceptée. Veuillez remplir ce formulaire pour fournir plus d'informations : ${googleFormsLink}`;
+            // Envoyez un e-mail de confirmation au candidat
+            await this.mailerService.sendEmail(applicationData.email, emailSubject, emailBody);
     
             // Renvoyer la candidature enregistrée
 
