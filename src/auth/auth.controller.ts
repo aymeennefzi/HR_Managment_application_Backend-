@@ -123,7 +123,7 @@ export class AuthController {
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
-@Post('user-by-task')
+
 
 
 @Post(':personnelId')
@@ -204,7 +204,10 @@ async getUserByTaskId(@Body('taskId') taskId: string) {
     throw new NotFoundException(error.message);
   }
 }
-
+/* @Post('woker/signup')
+async createUserWithOptionalAdminAndRole(@Body() signupDto: signupDto): Promise<{ token: string }> {
+return await this.authservice.createUserWithOptionalAdminAndRole(signupDto);
+} */
 }
 
 

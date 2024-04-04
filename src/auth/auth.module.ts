@@ -13,6 +13,7 @@ import { RoleSchema } from './Shemas/Roles.Shema';
 import { MailerService } from './Mail.service';
 import { AttendanceService } from 'src/attendance/attendance.service';
 import { Attendance, AttendanceSchema } from 'src/attendance/Schema/Attendance.schema';
+/* import {  Workers, WorkersSchema } from './Shemas/Workers.Shema'; */
 
 @Module({
   imports:[
@@ -30,6 +31,7 @@ import { Attendance, AttendanceSchema } from 'src/attendance/Schema/Attendance.s
       {name:User.name ,schema:UserSchema},
      { name: 'Role', schema: RoleSchema },
      {name:Attendance.name ,schema:AttendanceSchema},
+/*      {name:Workers.name ,schema:WorkersSchema}, */
 
      ])
   ],

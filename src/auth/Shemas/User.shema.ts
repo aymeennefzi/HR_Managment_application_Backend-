@@ -74,8 +74,12 @@ import { Payroll } from 'src/payroll/Schema/Payroll.schema';
       profileImage: string;
       @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Tasks }] })
       tasks:Tasks []; 
-      @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Teams'} )
-      teams:Teams ; 
+     /*  @Prop({type:mongoose.Schema.Types.ObjectId,ref:'User'})
+      admin: User;
+      @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: ()=>User }] })
+      workers:User [];  */
+      @Prop({ type: mongoose.Schema.Types.ObjectId, ref: ()=>Teams} )
+      teams:Teams[] ; 
       @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Performance }] )
       performances:Performance []; 
       @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Project }] )
@@ -113,6 +117,7 @@ import { Payroll } from 'src/payroll/Schema/Payroll.schema';
     
       @Prop({ type: [{ type: Types.ObjectId, ref: 'Payroll' }] })
       payrolls: Payroll[];
+
   }
 
     export const  UserSchema=SchemaFactory.createForClass(User);

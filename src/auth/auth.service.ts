@@ -290,11 +290,60 @@ async activateUser(userId: string): Promise<User> {
         return user;
      }
     async findByEmail(email: string): Promise<User> {
-      const user = await this.userMosel.findOne({ email }).exec();
+      const user = await this.userMosel.findOne({ email:email }).exec();
          if (!user) {
          throw new NotFoundException('User not found');
         }
         return user;
      } 
+/*      async createUserWithOptionalAdminAndRole(signupDto: signupDto): Promise<{ token: string }> {
+      const { firstName, lastName, email, password, roleName, EmailSecondaire, TelSecondaire, dateEntree, Tel, Matricule, soldeConges, soldeMaladie, fonction, idAdmin } = signupDto;
+      
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Find or create the role
+      const role = await this.roleS.findRoleByName(roleName);
+      const savedRole = await role.save();
+      
+      // Create the user with role and other details
+      const newUser = new this.userMosel({
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        role: savedRole, // Assure that your User model can store a reference to the role
+        EmailSecondaire,
+        TelSecondaire,
+        dateEntree,
+        Tel,
+        Matricule,
+        soldeConges,
+        soldeMaladie,
+        fonction,
+        workers: [], // Initialize workers array if your schema includes it
+      });
+    
+      const savedUser = await newUser.save();
+      
+      // Optionally, associate the user with an admin
+      if (idAdmin) {
+        const adminUser = await this.userMosel.findById(idAdmin);
+        if (!adminUser) {
+          throw new HttpException("Admin not found", 400);
+        }
+        await this.userMosel.updateOne({ _id: idAdmin }, { $push: { workers: savedUser._id } });
+      }
+      
+      // Generate the token based on your authentication logic
+      const token = this.jwtservice.sign({ id: savedUser._id, role: roleName });
+      
+      // Send a welcome email
+      const welcomeMessage = `Votre compte a été créé avec succès. Voici votre mot de passe : ${password}`;
+      await this.mailerService.sendEmail(email, 'Bienvenue sur notre plateforme', welcomeMessage);
+      
+      return { token };
+    } */
+    
 }
 
