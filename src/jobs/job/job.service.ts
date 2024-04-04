@@ -37,9 +37,21 @@ constructor(@InjectModel(Job.name) private readonly jobModel: Model<Job>,
       async updateJob(jobId: string, updateJobDto: UpdateJobDto): Promise<Job> {
         return await this.jobModel.findByIdAndUpdate(jobId, updateJobDto, { new: true });
       }
+      // async deleteJob(jobId: string): Promise<Job> {
+      //   return this.jobModel.findByIdAndDelete(jobId).exec();
+      // }
       async deleteJob(jobId: string): Promise<Job> {
+        // 1. Récupérer les candidats qui ont appliqué pour cet emploi
+        const candidates = await this.applicationModel.find({ jobId }).exec();
+    
+        // 2. Supprimer les candidats de la base de données
+        const candidateIds = candidates.map(candidate => candidate._id);
+        await this.applicationModel.deleteMany({ _id: { $in: candidateIds } }).exec();
+    
+        // 3. Supprimer l'emploi
         return this.jobModel.findByIdAndDelete(jobId).exec();
-      }
+    }
+    
 }
 interface JobWithApplicants {
     job: Job;

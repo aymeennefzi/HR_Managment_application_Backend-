@@ -1,10 +1,10 @@
-import { Body, ConsoleLogger, Controller, Delete, Get, Param, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, ConsoleLogger, Controller, Delete, Get, Param, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 import { Application } from '../schemas/application.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateApplicationDto } from './dto/UpdateApplication.dto';
 import { UpdateDepartmentDto } from 'src/departements/dto/UpdateDepartements.dto';
-
+import { Response } from 'express';
 @Controller('application')
 export class ApplicationController {
 
@@ -46,5 +46,33 @@ private readonly logger = new ConsoleLogger(ApplicationController.name);
   updateApplication(@Param('id') id: string, @Body() UpdateApplicationDto: UpdateApplicationDto): Promise<Application> {
     return this.applicationservice.updateCandidate(id, UpdateApplicationDto);
   }
+  // @Get('download')
+  // async downloadSheet(): Promise<string> {
+  //   try {
+  //     const csvContent = await this.applicationservice.downloadSheet();
+  //     return csvContent;
+  //   } catch (error) {
+  //     // Gérer les erreurs ici
+  //     console.error('Error downloading sheet:', error);
+  //     throw error;
+  //   }
+  // }
+  @Get('download')
+  async downloadExcel(@Res() res: Response): Promise<void> {
+    try {
+      const filePath = await this.applicationservice.exportResponsesToExcel();
+      res.download(filePath, 'optiflow.xlsx', (err) => {
+        if (err) {
+          console.error('Error downloading file:', err);
+          res.status(500).send('Internal Server Error');
+        } else {
+          console.log('File downloaded successfully');
+        }
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  }
+  }
 
-}
