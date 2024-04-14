@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpException, HttpStatus, NotFoundException, Pa
 import { CreatePayrollDto, EmployeeSalaryDto } from './dto/CreatePayroll.dto';
 import { PayrollService } from './payroll.service';
 import { Payroll } from './Schema/Payroll.schema';
+import { Cron } from '@nestjs/schedule';
 
 @Controller('payroll')
 export class PayrollController {
@@ -22,7 +23,7 @@ export class PayrollController {
     }
   }
 
-  
+ 
 
   
 
@@ -81,6 +82,7 @@ export class PayrollController {
             return { message: error.message };
         }
     }
+    
   async triggerCron(): Promise<string> {
     await this.payrollService.handleCron();
     return 'CRON déclenché avec succès.';

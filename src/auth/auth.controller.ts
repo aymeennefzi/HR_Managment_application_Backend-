@@ -1,4 +1,4 @@
-import {  Body, Controller, Get, NotFoundException, Param, Patch, Post, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {  Body, Controller, Get, HttpException, NotFoundException, Param, Patch, Post, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { signupDto } from './dto/signupDto';
 import { loginDto } from './dto/login.dto';
@@ -123,10 +123,10 @@ export class AuthController {
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
-@Post('user-by-task')
+// @Post('user-by-task')
 
 
-@Post(':personnelId')
+@Post('att/:personnelId')
   async updateAttendanceList(
     @Param('personnelId') personnelId: string,
     @Body() attend: UpdateAttendanceDto[],
@@ -168,45 +168,36 @@ async uploadPhoto1(@UploadedFile() file: Express.Multer.File, @Param('userId') u
 }
 
 @Get(':userId')
-  async getAttendancesForUser(@Param('userId') userId: string): Promise<Attendance[]> {
-    const attendances = await this.authservice.getPersonnelWithAttendances(userId);
-    
+async getAttendancesForUser(@Param('userId') userId: string): Promise<Attendance[]> {
+  const attendances = await this.authservice.getPersonnelWithAttendances(userId);
     if (!attendances || attendances.length === 0) {
       throw new NotFoundException('No attendances found for the user');
     }
-
     return attendances;
-  }
-
-
-
-
-
-
-// async getUserByTaskId(@Body('taskId') taskId: string) {
-//   // Appel au service pour obtenir l'utilisateur en fonction de l'ID de la tâche
-//   return await this.authservice.findUserByTaskId(taskId);
-// }
-// @Get('/:id')
-// async getUserById(@Param('id') id:string){
-// const isValid= mongoose.Types.ObjectId.isValid(id)
-// if(!isValid) throw new HttpException('task id not found',404)
-//  const findUser= await this. authservice.getUserById(id);
-//  if(!findUser) throw new HttpException('task not found',404)
-//  return findUser;
-// }
-// @Get('/email/:email')
-// async findByEmail(@Param('email') email: string) {
-//   try {
-//     const user = await this.authservice.findByEmail(email);
-//     return user;
-//   } catch (error) {
-//     throw new NotFoundException(error.message);
-//   }
-// }
-
 }
 
+@Post('user-by-task/ahmed')
+async getUserByTaskId(@Body('taskId') taskId: string) {
+  // Appel au service pour obtenir l'utilisateur en fonction de l'ID de la tâche
+  return await this.authservice.findUserByTaskId(taskId);
+}
 
+@Get('/:id/ahmed')
+async getUserById(@Param('id') id:string){
+const isValid= mongoose.Types.ObjectId.isValid(id)
+if(!isValid) throw new HttpException('task id not found',404)
+ const findUser= await this. authservice.getUserById(id);
+ if(!findUser) throw new HttpException('task not found',404)
+ return findUser;
+}
 
-
+@Get('/email/:email')
+async findByEmail(@Param('email') email: string) {
+  try {
+    const user = await this.authservice.findByEmail(email);
+    return user;
+  } catch (error) {
+    throw new NotFoundException(error.message);
+  }
+}
+}

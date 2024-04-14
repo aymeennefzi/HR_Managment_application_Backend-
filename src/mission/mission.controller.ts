@@ -1,10 +1,9 @@
-
-import { Controller, Post, Body, HttpException, Get, Delete, Param, Put, NotFoundException, Query, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpException, Get, Delete, Param, Put, NotFoundException, Query } from '@nestjs/common';
 import { MissionService } from './mission.service';
 import { Mission } from './Shemas/Mission.Shema';
 import { CreateMissionDto } from './Dto/CreateMission.Dto';
 import { UpdateMissionDto } from './Dto/UpdateMission.Dto';
-import mongoose, { Types } from 'mongoose';
+import { User } from 'src/auth/Shemas/User.shema';
 
 @Controller('missions')
 export class MissionController {
@@ -12,11 +11,11 @@ export class MissionController {
 
   @Post('assign-user')
   async assignUserToMission(
-    @Body() data: { missionId: string, userId: string }
-  ): Promise<Mission> {
+    @Body() data: { missionId: string, useremail: string }): Promise<Mission> {
     try {
-      const { missionId, userId } = data;
-      const mission = await this.missionService.assignUserToMission(missionId, userId);
+      const { missionId, useremail } = data;
+      let email=useremail.toString()
+      const mission = await this.missionService.assignUserToMission(missionId, email);
       return mission;
     } catch (error) {
       throw new HttpException(error.message, error.status);
@@ -78,61 +77,54 @@ export class MissionController {
     return existingMission.save();
   }
 
-  // @Delete('delete-multiple')
-  // async deleteMultipleMissions(@Body() missionIds: string[]): Promise<void> {
-  //   try {
-  //     const objectIds = missionIds.map(id => Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : null).filter(id => id !== null);
-
-  //     if (objectIds.length === 0) {
-  //       throw new HttpException('Invalid missionIds', HttpStatus.BAD_REQUEST);
-  //     }
-      
-  //     for (const objectId of objectIds) {
-  //       await this.missionService.deleteMission(objectId.toHexString());
-  //     }
-  //   } catch (error) {
-  //     throw new HttpException('Error deleting missions', HttpStatus.INTERNAL_SERVER_ERROR);
-  //   }
-  // }
-  // @Delete('/deletemultiple')
-  // async deleteMultipleMissions(@Body() missionIds: string): Promise<void> {
-  //   try {
-  //     // Vérifier si missionIds est un tableau non vide
-  //     if (!Array.isArray(missionIds) || missionIds.length === 0) {
-  //       throw new HttpException('Invalid missionIds', HttpStatus.BAD_REQUEST);
-  //     }
-
-  //     // Vérifier si tous les identifiants sont valides
-  //     const objectIds = missionIds.map(id => {
-  //       if (!Types.ObjectId.isValid(id)) {
-  //         throw new HttpException(`Invalid missionId: ${id}`, HttpStatus.BAD_REQUEST);
-  //       }
-  //       return new Types.ObjectId(id);
-  //     });
-
-  //     // Supprimer chaque mission
-  //     for (const objectId of objectIds) {
-  //       await this.missionService.deleteMission(objectId.toHexString());
-  //     }
-  //   } catch (error) {
-  //     // Si une erreur est survenue, la renvoyer avec le code d'erreur approprié
-  //     throw new HttpException('Error deleting missions', HttpStatus.INTERNAL_SERVER_ERROR);
-  //   }
-
-  // }
-  // console.log(missionIds);
-
-//}
 @Get("/deletemissions")
 async delemissions(@Query('missions') missions :string[]):Promise<void>{
   console.log(missions);
 
 }
+@Post(':missionId/assign-client/:clientId')
+async assignClientToMission(@Param('missionId') missionId: string, @Param('clientId') clientId: string): Promise<Mission> {
+  return this.missionService.assignClientToMission(missionId, clientId);
+}
+
+
 @Post('delete-multiple')
 async deleteMultipleMissions(@Body('ids') ids: string[]): Promise <void> {
   try {
     const result = await this.missionService.deleteMultipleMissions(ids);
   } catch (error) {
   }
+}
+@Get(':missionId/client/:clientId/employees')
+  async getEmployeesAssignedToMissionForClient(@Param('missionId') missionId: string, @Param('clientId') clientId: string): Promise<any> {
+    const mission = await this.missionService.findById(missionId);
+    if (mission.client && mission.client.toString() === clientId) {
+      const employees = mission.assignedTo;
+      return { employees };
+    } else {
+      throw new HttpException('La mission spécifiée n\'a pas ce client attribué', 404);
+    }
+  }
+  @Post(':clientId')
+  async createAndAssignMission(@Body() createMissionDto: CreateMissionDto, @Param('clientId') clientId: string) {
+    const mission = await this.missionService.createAndAssignMission(createMissionDto, clientId);
+    if (!mission) {
+      throw new NotFoundException('Mission non créée');
+    }
+    return mission;
+  }
+  @Get('employee/:employeeId')
+  async getMissionByEmployeeId(@Param('employeeId') employeeId: string): Promise<Mission> {
+    const mission = await this.missionService.getMissionByEmployeeId(employeeId);
+    if (!mission) {
+      throw new NotFoundException('Mission non trouvée pour cet employé');
+    }
+    return mission
+    
+
+}
+    @Get('available-users')
+async getAvailableUsers(@Body('date') date: string): Promise<User[]> {
+  return this.missionService.getUsersAvailable(date);
 }
 }

@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsString, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
 import { Role } from "../Shemas/Roles.Shema";
 
 export class signupDto{
@@ -58,5 +58,9 @@ export class signupDto{
   @IsNotEmpty()
   @IsNumber()
   soldeMaladie : number ;
+  @IsNotEmpty()
+  @IsNumber()
+  uploadImg : string ;
+  
 
 }

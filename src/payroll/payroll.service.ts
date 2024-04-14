@@ -12,7 +12,6 @@ import { PaymentPolicyService } from 'src/payment-policy/payment-policy.service'
 import { CongeService } from 'src/conges/Conge.service';
 import { Cron } from '@nestjs/schedule';
 
-
 @Injectable()
 export class PayrollService {
 
@@ -193,15 +192,16 @@ export class PayrollService {
         }
     }
     
-    
+    @Cron('0 */1 * * * *') 
+    async handleCron() {
+      await this.schedulePayrollGeneration(); 
+    }
 
-     @Cron('0 0 * * * *')      
-      async handleCron() {
-        await this.schedulePayrollGeneration();
-        
-      }
+
+     
       async schedulePayrollGeneration() {
         const paymentPolicy = await this.PayPolicyModel.findOne().sort({ createdAt: -1 });
+        
         if (!paymentPolicy || !paymentPolicy.paymentDay) {
             throw new Error('PaymentPolicy, la date ou le jour de paiement est manquant.');
         }

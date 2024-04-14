@@ -8,6 +8,8 @@ import { Teams } from 'src/teams/schema/Teams.schema';
 import { Project } from 'src/project/schema/Project.schema';
 import { Poste } from 'src/payroll/Schema/Poste.schema';
 import { Payroll } from 'src/payroll/Schema/Payroll.schema';
+import { Message } from 'src/Chats/models/message.model';
+import { Room } from 'src/Chats/models/room.model';
 
 
 
@@ -27,7 +29,7 @@ import { Payroll } from 'src/payroll/Schema/Payroll.schema';
       @Prop()
       password: string;
 
-      @Prop({ default: false })
+      @Prop({ default: true })
       isActive: boolean;
 
       @Prop({ type: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' }})
@@ -72,6 +74,7 @@ import { Payroll } from 'src/payroll/Schema/Payroll.schema';
 
       @Prop({nullable: true})
       profileImage: string;
+
       @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Tasks }] })
       tasks:Tasks []; 
       @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Teams'} )
@@ -107,12 +110,30 @@ import { Payroll } from 'src/payroll/Schema/Payroll.schema';
       
       @Prop()
       datebirth : string ;
+      
       @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Poste' })
-      poste: Poste ; // Déclaration de poste comme étant de type Poste ou de type mongoose.Types.ObjectId
+      poste: Poste ;
   
-    
       @Prop({ type: [{ type: Types.ObjectId, ref: 'Payroll' }] })
       payrolls: Payroll[];
+
+      @Prop()
+      total : number ;
+      
+      @Prop()
+      accepted : number ;
+      
+      @Prop()
+      declined : number ;
+      
+      @Prop()
+      clientId: string;
+    
+      @Prop({type: [{type: Types.ObjectId, ref: 'Message'}]})
+      messages?: Message[];
+    
+      @Prop({type: [{type: Types.ObjectId, ref: 'Room'}]})
+      joinedRooms?: Room[];
   }
 
     export const  UserSchema=SchemaFactory.createForClass(User);

@@ -39,7 +39,7 @@ export class AuthService {
     ){}
    
     async signUp(signupDto: signupDto): Promise<{ token: string }> {
-      const { firstName, lastName , email, password, roleName , EmailSecondaire , TelSecondaire , dateEntree , Tel , Matricule  , soldeConges , soldeMaladie , fonction } = signupDto;
+      const { firstName, lastName , email, password, roleName , EmailSecondaire , TelSecondaire , dateEntree , Tel , Matricule  , soldeConges , soldeMaladie , uploadImg,fonction } = signupDto;
       const hashedPassword = await bcrypt.hash(password, 10);
       const role = await this.roleS.findRoleByName(roleName); 
       const savedRole= await role.save()
@@ -56,7 +56,7 @@ export class AuthService {
         Matricule ,
         soldeConges ,
         soldeMaladie ,
-        fonction
+        fonction,uploadImg
       });
       await user.save();
       await this.userMosel.updateOne({_id : user._id},{$push: {role : savedRole.name}});
@@ -279,22 +279,22 @@ async activateUser(userId: string): Promise<User> {
       // Enregistrez les modifications dans la base de données
       return await user.save();
     }
-    // getUserById(id:string){
-    //   return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
-    // }
-    // async findUserByTaskId(taskId: string): Promise<User> {
-    //     const user = await this.userMosel.findOne({ tasks: taskId }).exec();
-    //     if (!user) {
-    //         throw new NotFoundException('User with the given task ID not found');
-    //     }
-    //     return user;
-    // }
-    // async findByEmail(email: string): Promise<User> {
-    //     const user = await this.userMosel.findOne({ email }).exec();
-    //     if (!user) {
-    //     throw new NotFoundException('User not found');
-    //     }
-    //     return user;
-    // }
+    getUserById(id:string){
+      return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
+    }
+    async findUserByTaskId(taskId: string): Promise<User> {
+        const user = await this.userMosel.findOne({ tasks: taskId }).exec();
+        if (!user) {
+            throw new NotFoundException('User with the given task ID not found');
+        }
+        return user;
+    }
+    async findByEmail(email: string): Promise<User> {
+        const user = await this.userMosel.findOne({ email }).exec();
+        if (!user) {
+        throw new NotFoundException('User not found');
+        }
+        return user;
+    }
 }
 

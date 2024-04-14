@@ -15,6 +15,7 @@ export class CreateAttendanceDto {
     @IsEnum(Etat)
     etat : Etat
 }
+    
 export class UpdateAttendanceDto{
     @IsNotEmpty()
     @IsEnum(AttendanceStatus)

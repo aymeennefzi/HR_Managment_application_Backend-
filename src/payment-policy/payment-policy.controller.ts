@@ -17,14 +17,24 @@ export class PaymentPolicyController {
       return this.paymentPolicyService.findAll();
     }
     @Put(':id')
-  async updatePayment(@Param('id') paymentId: string, @Body() updatePaymentDto: CreatePaymentPDto): Promise<PaymentP> {
-    try {
-      return await this.paymentPolicyService.updatePayment(paymentId, updatePaymentDto);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
+    async updatePayment(@Param('id') policyId: string, @Body() updatePolicyDto: CreatePaymentPDto): Promise<PaymentP> {
+      try {
+        const updatedPolicy = await this.paymentPolicyService.updatePay(policyId, updatePolicyDto);
+        return updatedPolicy;
+      } catch (error) {
         throw new NotFoundException(error.message);
       }
-      throw error;
     }
-  }
+
+    @Get('get/:id')
+    async findById(@Param('id') id: string): Promise<PaymentP> {
+      try {
+        const paymentPolicy = await this.paymentPolicyService.findById(id);
+        return paymentPolicy;
+      } catch (error) {
+        console.error('Error while finding payment policy by ID:', error);
+        return null;
+      }
+    }    
+
 }

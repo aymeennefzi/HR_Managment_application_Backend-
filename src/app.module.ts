@@ -21,6 +21,8 @@ import { PerformanceModule } from './performance/performance.module';
 import { PaymentPolicyModule } from './payment-policy/payment-policy.module';
 import { PayrollModule } from './payroll/payroll.module';
 import {HolidaysModule} from "./holidays/holidays.module";
+import { MissionModule } from './mission/mission.module';
+import { ChatsModule } from './chats/chats.module';
 
 @Module({
     imports: [
@@ -43,16 +45,15 @@ import {HolidaysModule} from "./holidays/holidays.module";
             dest: './uploads',
         }),
         MulterConfigModule,
-        ServeStaticModule.forRoot({
-            rootPath: join(__dirname, '..', 'uploads'),
-        }),
         SkillModule,
         HolidaysModule,
         PaymentPolicyModule,
         PayrollModule,
-
-
-
+        MissionModule,
+        ServeStaticModule.forRoot({
+            rootPath: join(__dirname, '..', 'uploads'),
+        }),
+        ChatsModule,
     ],
     controllers: [AppController],
     providers: [AppService],

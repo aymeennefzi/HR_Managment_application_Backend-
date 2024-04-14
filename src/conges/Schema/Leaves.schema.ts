@@ -61,7 +61,7 @@ export class Leave extends Document {
     
     @Prop()
     numOfDays : number ;
-    
+
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     personnel: User;
 }

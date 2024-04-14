@@ -15,32 +15,47 @@ export class CongeService {
         if (!demandeConge) {
             throw new NotFoundException('Demande de congé introuvable');
         }
-
         demandeConge.status = 'Approved';
         const personnelId = demandeConge.personnel;
         const personnel = await this.personnelModel.findById(personnelId);
         if (!personnel) {
             throw new NotFoundException('Employé introuvable');
         }
-
         // Utiliser calculateLeaveDuration pour obtenir la durée du congee
         const { duration } = await this.calculateLeaveDuration(demandeConge.startDate, demandeConge.endDate, demandeConge.startTime, demandeConge.endTime);
-
         personnel.soldeConges -= duration;
+        personnel.accepted += 1; // Incrémenter l'attribut accepted
         await Promise.all([demandeConge.save(), personnel.save()]);
-
         return demandeConge;
     }
+    // async refuserDemandeConge(id: string): Promise<Leave> {
+    //     const demandeConge = await this.leaveModel.findById(id);
+    //     if (!demandeConge) {
+    //         throw new NotFoundException('Demande de congé introuvable');
+    //     }
+    //     demandeConge.status = 'Declined';
+    //     return demandeConge.save();
+    // }
     async refuserDemandeConge(id: string): Promise<Leave> {
         const demandeConge = await this.leaveModel.findById(id);
         if (!demandeConge) {
-            throw new NotFoundException('Demande de congé introuvable');
+          throw new NotFoundException('Demande de congé introuvable');
         }
+      
         demandeConge.status = 'Declined';
-        //demandeConge.motifRefus = motifRefus;
-        return demandeConge.save();
-
-    }
+      
+        const personnelId = demandeConge.personnel;
+        const personnel = await this.personnelModel.findById(personnelId);
+        if (!personnel) {
+          throw new NotFoundException('Employé introuvable');
+        }
+      
+        personnel.declined += 1; // Incrémenter l'attribut declined
+      
+        await Promise.all([demandeConge.save(), personnel.save()]);
+      
+        return demandeConge;
+      }
     async supprimerDemandeConge(id: string): Promise<void> {
         const demandeConge = await this.leaveModel.findByIdAndDelete(id);
         if (!demandeConge) {

@@ -21,7 +21,6 @@ import { AttendanceService } from 'src/attendance/attendance.service';
       {name : User.name , schema : UserSchema},
       {name :  Role.name , schema : RoleSchema},
       {name:Attendance.name ,schema:AttendanceSchema},
-
     ]),
       AuthModule
   ],
