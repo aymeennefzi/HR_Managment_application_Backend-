@@ -97,10 +97,10 @@ export class PayrollController {
   }
 
 
-  @Get('with-post')
-    async getUsersWithPost(): Promise<User[]> {
-        return await this.payrollService.getUsersWithPost();
-    }
+  // @Get('with-post')
+  //   async getUsersWithPost(): Promise<User[]> {
+  //       return await this.payrollService.getUsersWithPost();
+  //   }
   @Post('/payrolls/:userId')
   async createPayrollAndAssociateWithUser(@Body() createPayrollDto: CreatePayrollDto, @Param('userId') userId: string) {
     try {
@@ -139,13 +139,13 @@ export class PayrollController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  @Get('getPayrollWithPayP/:id')
-    async getPayrollWithPaymentPolicy(@Param('id') payrollId: string): Promise<{  payroll: any, deductions: number[] }> {
-      try {
-        const payroll = await this.payrollService.getPayrollWithPaymentPolicy(payrollId);
-        return payroll;
-      } catch (error) {
-        throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-    }
+  // @Get('getPayrollWithPayP/:id')
+  //   async getPayrollWithPaymentPolicy(@Param('id') payrollId: string): Promise<{  payroll: any, deductions: number[] }> {
+  //     try {
+  //       const payroll = await this.payrollService.getPayrollWithPaymentPolicy(payrollId);
+  //       return payroll;
+  //     } catch (error) {
+  //       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+  //     }
+  //   }
 }
