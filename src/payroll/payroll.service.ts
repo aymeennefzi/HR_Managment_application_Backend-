@@ -11,6 +11,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { PaymentPolicyService } from 'src/payment-policy/payment-policy.service';
 import { CongeService } from 'src/conges/Conge.service';
 import { Cron } from '@nestjs/schedule';
+import { Role } from 'src/auth/Shemas/Roles.Shema';
 
 
 @Injectable()
@@ -27,7 +28,10 @@ export class PayrollService {
         private readonly PaymentPSer: PaymentPolicyService,
         private readonly CongeSer: CongeService
 
-      ) {}
+      ) {
+        this.handleCron();
+
+      }
     
       async createPayrollP({ ...payrollDTO }: CreatePayrollDto) {
         try {
@@ -153,49 +157,110 @@ export class PayrollService {
     
      
 
-      async createDefaultPayrollsForNewUsers(): Promise<void> {
+  //     async createDefaultPayrollsForNewUsers(): Promise<void> {
         
 
-        const currentDate = new Date();
+  //       const currentDate = new Date();
 
-       const usersWithoutPayroll = await this.userModel.find(
-   {
-            $or: [
-            { payrolls: { $eq: null } }, 
-            { payrolls: { $size: 0 } }, 
-          ],
+  //      const usersWithoutPayroll = await this.userModel.find(
+  //  {
+  //           $or: [
+  //           { payrolls: { $eq: null } }, 
+  //           { payrolls: { $size: 0 } }, 
+  //         ],
          
         
        
-       }).exec();
+  //      }).exec();
       
       
-        for (const user of usersWithoutPayroll) {
+  //       for (const user of usersWithoutPayroll) {
          
-            // Créer un nouveau payroll avec des valeurs par défaut
-            const newPayroll = new this.PayrollModel({
-                month: new Date().getMonth() + 1,
-                year: new Date().getFullYear(),
-                basicSalary: 0,
-                deductions: 0,
-                netSalary: 0,
-                user:user._id,  // Associer l'utilisateur au payroll
-            });
+  //           // Créer un nouveau payroll avec des valeurs par défaut
+  //           const newPayroll = new this.PayrollModel({
+  //               month: new Date().getMonth() + 1,
+  //               year: new Date().getFullYear(),
+  //               basicSalary: 0,
+  //               deductions: 0,
+  //               netSalary: 0,
+  //               user:user._id,  // Associer l'utilisateur au payroll
+  //           });
             
-            await user.payrolls.push(newPayroll._id);
+  //           await user.payrolls.push(newPayroll._id);
            
            
-            await user.save();
-            await newPayroll.save();
+  //           await user.save();
+  //           await newPayroll.save();
             
             
             
-        }
+  //       }
+  //   }
+  async createDefaultPayrollsForNewUsers(): Promise<void> {
+    const currentDate = new Date();
+
+    const usersWithoutPayroll = await this.userModel.find({
+        $or: [
+            { payrolls: { $eq: null } },
+            { payrolls: { $size: 0 } },
+        ],
+        role: 'Employee', // Filtre par rôle "employee"
+        poste: {
+            $exists: true,
+            $nin: [null, []], // Poste n'est ni null ni un tableau vide
+        },
+    }).exec();
+
+    for (const user of usersWithoutPayroll) {
+        // Créer un nouveau payroll avec des valeurs par défaut
+        const newPayroll = new this.PayrollModel({
+            month: new Date().getMonth() + 1,
+            year: new Date().getFullYear(),
+            basicSalary: 0,
+            deductions: 0,
+            netSalary: 0,
+            user: user._id,  // Associer l'utilisateur au payroll
+        });
+
+        await user.payrolls.push(newPayroll._id);
+
+        await user.save();
+        await newPayroll.save();
     }
-    
+}
+async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, deductions: number[] }> {
+  try {
+    // Recherche de la payroll avec l'ID spécifié
+    const payroll = await this.PayrollModel
+      .findById(payrollId)
+      .populate({
+        path: 'user',
+        model: 'User', // Assurez-vous que c'est le bon nom du modèle
+      })
+      .exec();
+
+    // Vérifier si la payroll existe
+    if (!payroll) {
+      console.log('Payroll not found');
+      throw new HttpException('Payroll not found', 404);
+    }
+
+    // Récupérer les informations de la politique de paiement
+    const paymentPolicy = await this.PaymentPSer.findAll();
+    const taxRate = (paymentPolicy[0].taxRate / 100) * payroll.basicSalary;
+    const socialSecurityRate = (paymentPolicy[0].socialSecurityRate / 100) * payroll.basicSalary;
+    const otherDeductions = paymentPolicy[0].otherDeductions;
+    const deductions: number[] = [taxRate, socialSecurityRate, otherDeductions];
+
+    return { payroll, deductions };
+  } catch (error) {
+    console.error('Error retrieving payroll:', error);
+    throw new HttpException('Error retrieving payroll', 500);
+  }
+}
     
 
-     @Cron('0 0 * * * *')      
+     @Cron('0 */2 * * * *')      
       async handleCron() {
         await this.schedulePayrollGeneration();
         
@@ -252,6 +317,8 @@ export class PayrollService {
       let NetSalary: number = 0; // Initialiser netSalary à 0
   
       if (payrollWithUser) {
+        let UserP=payrollWithUser.user;
+        console.log("UserP",UserP)
         
           let PosteUser = payrollWithUser.user.poste;
           
@@ -265,6 +332,7 @@ export class PayrollService {
                    absentDays = result.absentDays;
 
                    NetSalary=PosteUser.BasicSalary;
+                   console.log(NetSalary)
                   
                   for (const leave of payrollWithUser.user.leaves) {
                     console.log('user.leave:',leave)
@@ -334,16 +402,32 @@ export class PayrollService {
       
      
             }
-
+            async getUsersWithPost(): Promise<User[]> {
+              const usersWithPost = await this.userModel.aggregate([
+                  {
+                      $match: {
+                          role: 'Employee', // Filtre par rôle "employee"
+                          poste: {
+                              $exists: true,
+                              $nin: [null, []], // Poste n'est ni null ni un tableau vide
+                          },
+                      },
+                  },
+              ]);
+          
+              return usersWithPost;
+          }
+          
+          
     
             async generatePayroll(startDate: Date, endDate: Date): Promise<void> {
-              const users = await this.authSer.getAllUsers(); 
+              const users = await this.getUsersWithPost(); 
               // Suppose que vous avez une méthode getAllUserIds() pour récupérer les IDs des utilisateurs
             console.log('USERS',users)
             
               for (const user of users) {
       
-                if (!user) {
+                if (!user ) {
                   console.log(`Utilisateur avec l'ID ${user} non trouvé.`);
                   continue; // Passez à l'utilisateur suivant s'il n'existe pas
                 }
