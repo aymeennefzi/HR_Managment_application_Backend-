@@ -9,7 +9,7 @@ export class ProjectController {
     constructor(private projectService:ProjectService){}
    
     @Post()
-    @UsePipes(new ValidationPipe())//enbales validation locally
+    @UsePipes(new ValidationPipe())//enbales validation locallyy
    createUser(@Body()createuserdto:CreateProjectDto){
     console.log(createuserdto);
     return this. projectService.createProject(createuserdto);
