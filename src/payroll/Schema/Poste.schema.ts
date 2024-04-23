@@ -18,6 +18,7 @@ export class Poste {
     @Prop({ type: [{ type: 'ObjectId', ref: 'User' }] })
     Users: User[];
     
+      
 }
 
   
