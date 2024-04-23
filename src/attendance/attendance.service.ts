@@ -11,31 +11,6 @@ import * as moment from 'moment';
 export class AttendanceService {
     constructor(@InjectModel(Attendance.name) private attendanceModel: Model<Attendance>, @InjectModel(User.name) private userModel: Model<User> , private readonly authService : AuthService,private readonly personnelservice:AuthService) {
     }
-
-    // async generateAttendanceTableForWeek1(): Promise<void> {
-    //     const personnelList = await this.userModel.find().exec();
-
-    //     const today = new Date();
-    //     const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (today.getDay() - 1)); // Start from Monday
-    //     const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6); // End on Sunday
-
-    //     for (const personnel of personnelList) {
-    //         const attendances = [];
-    //         for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
-    //             const attendance = new this.attendanceModel({
-    //                 date: currentDate,
-    //                 etat: Etat.pending,
-    //                 status: AttendanceStatus.Absent,
-    //             });
-    //             // Save the attendance
-    //             await attendance.save();
-    //             attendances.push(attendance); // Store the ID in the array
-    //         }
-    //         personnel.attendances = attendances;
-    //         await personnel.save();
-    //         //console.log(personnel.attendances)
-    //     }
-    // }
     async generateAttendanceTableForWeek(): Promise<void> {
         const personnelList = await this.userModel.find().exec();
     
@@ -49,7 +24,6 @@ export class AttendanceService {
                 const formattedDate = currentDate.toISOString().split('T')[0]; // Extract YYYY-MM-DD part
                 const dateParts = formattedDate.split('-');
                 const formattedDateWithoutTime = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
-                //console.log(formattedDateWithoutTime)
                 const attendance = new this.attendanceModel({
                     date: formattedDateWithoutTime,                 
 
@@ -96,7 +70,6 @@ export class AttendanceService {
     async getNotApprovedAttendances(personnelId: string): Promise<Attendance[]> {
         try {
             const attendanceList = await this.personnelservice.getAttendaces(personnelId);
-            console.log(attendanceList);
 
             if (!attendanceList) {
                 console.log('Impossible de récupérer la liste des présences.');
@@ -114,14 +87,12 @@ export class AttendanceService {
     async getApprovedAttendances(personnelId: string): Promise<Attendance[]> {
         try {
             const attendanceList = await this.authService.getAttendaces(personnelId);
-            console.log(attendanceList);
 
             if (!attendanceList) {
                 console.log('Impossible de récupérer la liste des présences.');
                 return [];
             }
 
-            console.log("après if");
             const ApprovedAttendances = attendanceList.filter(attendance => attendance.etat !== Etat.pending);
             return ApprovedAttendances;
         } catch (error) {
@@ -134,12 +105,6 @@ export class AttendanceService {
     async getApprovedAttendancesSalaire(personnelId: string, startDate: Date, endDate: Date): Promise<Attendance[]> {
         try {
             const attendanceList = await this.authService.getAttendaces(personnelId); // Assurez-vous que getAttendaces accepte les paramètres de date
-    
-            console.log("Attendance List:", attendanceList);
-            console.log("Start Date:", startDate);
-            console.log("End Date:", endDate);
-    
-            console.log("après if");
             const ApprovedAttendances: Attendance[] = [];
            
 
@@ -149,14 +114,10 @@ export class AttendanceService {
         newEndDate.setHours(23, 59, 59, 999);
         const newStartDate = new Date(startDate);
         newStartDate.setHours(23, 59, 59, 999);
-        console.log(attendanceDate)
-        console.log(attendanceDate >= startDate)
     if (attendance.etat != Etat.pending && attendanceDate >= newStartDate && attendanceDate <= newEndDate) {
         ApprovedAttendances.push(attendance);
     }
             }
-
-            console.log(ApprovedAttendances)
             return ApprovedAttendances;
             
         } catch (error) {
@@ -164,7 +125,6 @@ export class AttendanceService {
             return [];
         }}
     async validatePresence(personnelId: string, attend: UpdateEtatDto[]): Promise<void> {
-        console.log(attend);
         const attendanceList = await this.getNotApprovedAttendances(personnelId);
         if (!attendanceList) {
             console.log('Impossible de récupérer la liste des présences.');
@@ -174,17 +134,14 @@ export class AttendanceService {
             console.log('attend doit être un tableau');
             return;
         }
-        console.log(attendanceList);
         for (const attendance of attendanceList) {
             for (const att of attend) {
                 const attendanceDate = new Date(attendance.date).setHours(0, 0, 0, 0);
                 const attDate = new Date(att.date).setHours(0, 0, 0, 0);
                 if (attendanceDate === attDate) {
                     attendance.etat = att.etat;
-                    console.log(attendance.status);
                     // Mettre à jour l'objet de présence
                     await attendance.save();
-                    console.log(attendance);
                 }
             }
         }
@@ -194,7 +151,6 @@ export class AttendanceService {
         let absentDays = 0;
         let attendanceList =  await this.getApprovedAttendances(personalId);
         for (const attendance of attendanceList) {
-            console.log(attendanceList)
             if (attendance.status === 1 || attendance.status === 0.5 || attendance.status === 0.5) {
                 presentDays += attendance.status;
             } else {
@@ -215,8 +171,6 @@ export class AttendanceService {
             
             const startDateOfWeek = moment().startOf('isoWeek').toDate(); // Lundi de la semaine en cours
             const endDateOfWeek = moment().endOf('isoWeek').subtract(1, 'day').toDate(); // Samedi de la semaine en cours
-            console.log(startDateOfWeek);
-            console.log(endDateOfWeek); 
           // Récupérer tous les utilisateurs avec leurs présences pour la semaine en cours
           const usersWithAttendances = await this.userModel
             .find()
@@ -257,7 +211,6 @@ export class AttendanceService {
         let presentDays = 0;
         let absentDays = 0;
         let attendanceList =  await this.getApprovedAttendancesSalaire(personalId, startDate, endDate);
-        console.log('attendance',attendanceList)
         for (const attendance of attendanceList) {
             // Vérifier si l'état de l'assiduité est "Approuvé"
             if (attendance.etat === 'Approved') {

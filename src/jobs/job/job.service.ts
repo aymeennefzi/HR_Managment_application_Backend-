@@ -15,9 +15,7 @@ constructor(@InjectModel(Job.name) private readonly jobModel: Model<Job>,
       }
 
       async findAll(): Promise<any[]> {
-        return this.jobModel.find().exec();
-     
-        
+        return this.jobModel.find().exec(); 
       }
       async findById(id: string): Promise<Job> {
         const job = await this.jobModel.findById(id).exec();

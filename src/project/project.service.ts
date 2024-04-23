@@ -2,7 +2,6 @@ import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/auth/Shemas/User.shema';
-
 import { CreateProjectDto } from './dto/CreateProject.dto';
 import { Project, TypeStatutProjet } from './schema/Project.schema';
 import { Tasks } from './schema/Tasks.schema';

@@ -92,13 +92,9 @@ export class CongeController {
             throw new Error(`Failed to fetch leaves for employee ${id}: ${error.message}`);
         }
     }
-    // @Get()
-    // async getAllUsersWithConges(): Promise<User[]> {
-    //   return this.congeService.getAllUsersWithConges();
-    // }
 
     @Get('leaves')
-  async getUsersWithLeaves(): Promise<{ name: string; leaves: Leave[] }[]> {
+    async getUsersWithLeaves(): Promise<{ name: string; leaves: Leave[] }[]> {
     return this.congeService.getUsersWithLeaves();
   }
 

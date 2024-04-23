@@ -9,7 +9,6 @@ export class EntreprisesController {
     @Post()
     @UsePipes(new ValidationPipe())//enbales validation locally
     createEntreprise(@Body() entreprisedto:CreateEntrepriseDto){
-    console.log(entreprisedto);
     return this.entrepriseService.createEntreprise(entreprisedto);
    }
    @Get()
@@ -35,7 +34,5 @@ export class EntreprisesController {
     const isValid= mongoose.Types.ObjectId.isValid(id)
     if(!isValid) throw new HttpException('INVALID id',400) 
     const deletedEntreprise=await this.entrepriseService.deleteEntreprise(id)
-    console.log(deletedEntreprise)
-
    }
 }

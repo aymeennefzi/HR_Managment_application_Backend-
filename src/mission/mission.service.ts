@@ -25,30 +25,17 @@ export class MissionService {
 
   async createMission(createMissionDto: CreateMissionDto): Promise<Mission> {
     const createdMission = new this.missionModel(createMissionDto);
-    // const enterpriseId = await this.enterpriseSedrvice.createEntreprise(createMissionDto.enterprise);
-    // createdMission.lieu = enterpriseId;
     return createdMission.save();
   }
 
-  // async findAll(): Promise<Mission[]> {
-  //   return this.missionModel.find().exec();
-  // }
+ 
   async assignUserToMission(missionId: string, userEmail: string): Promise<Mission> {
     const user = await this.UserModel.findOne({ email: userEmail }).exec(); 
-    console.log(user);
-       const mission = await this.missionModel.findById(missionId);
-    console.log(mission);
+    const mission = await this.missionModel.findById(missionId);
     let id = user._id.toString();
-    console.log(id);
     const   datemission =  mission.startDate;
-    console.log(datemission);
-    // const isdisponible =await this.TaskService.isUserDisponible(id,datemission);
-    // const isdisponiblemission=await this.isUserAvailableForMission(id,datemission) ;
-    // console.log(isdisponible);
-        // if(isdisponible && isdisponiblemission){
     mission.assignedTo.push(user._id); 
     return mission.save();
-  // }else{throw new HttpException('Cet employé est indisponible dans cette date',400)}
 }
   
 async updateMission(missionId: string, updateMissionDto: UpdateMissionDto): Promise<Mission> {
@@ -89,27 +76,11 @@ async deleteMission(missionId: string): Promise<void> {
 }
 async deleteMultipleMissions(ids: string[]):Promise<void> {
     try {
-    console.log(ids);
-      // Supprimer les missions en utilisant l'opérateur $in pour spécifier plusieurs IDs
       const result = await this.missionModel.deleteMany({ _id: { $in: ids } }).exec();
-    
     } catch (error) {
       console.log(error);
     }
   }
-// async deleteMultipleMissions(missionIds: string[]): Promise<void> {
-//   try {
-//     console.log(missionIds);
-//     for(let missionId of missionIds) {
-//       // await this.missionModel.deleteMany({ _id: { $in: missionIds } });
-//       await this.missionModel.findByIdAndDelete({ _id: missionId });
-
-
-//     }
-//   } catch (error) {
-//     throw new HttpException('error', 500);
-//   }
-// }
 async findAll(pageNumber: number, pageSize: number): Promise<Mission[]> {
   const skip = (pageNumber - 1) * pageSize;
   return this.missionModel.find().skip(skip).limit(pageSize).exec();
@@ -208,7 +179,6 @@ async isUserAvailableForMission(employeeId: string, date: string): Promise<boole
 
     return missionCount === 0;
   } catch (error) {
-    // Handle any errors that occur during the execution of the method
     throw new HttpException('Failed to check user availability for mission.', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

@@ -29,11 +29,7 @@ export class MissionController {
       throw error;
     }
   }
-  // @Get()
-  // async getAll(): Promise<Array<Mission>>{
-  //   return await this.missionService.findAll();
-
-  // }
+  
   @Delete('/:missionId')
   async deleteMission(@Param('missionId') missionId: string): Promise<void> {
     const existingMission = await this.missionService.findById(missionId);

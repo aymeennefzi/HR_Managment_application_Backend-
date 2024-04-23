@@ -24,18 +24,10 @@ export class CongeService {
         // Utiliser calculateLeaveDuration pour obtenir la durée du congee
         const { duration } = await this.calculateLeaveDuration(demandeConge.startDate, demandeConge.endDate, demandeConge.startTime, demandeConge.endTime);
         personnel.soldeConges -= duration;
-        personnel.accepted += 1; // Incrémenter l'attribut accepted
+        personnel.accepted += 1; 
         await Promise.all([demandeConge.save(), personnel.save()]);
         return demandeConge;
     }
-    // async refuserDemandeConge(id: string): Promise<Leave> {
-    //     const demandeConge = await this.leaveModel.findById(id);
-    //     if (!demandeConge) {
-    //         throw new NotFoundException('Demande de congé introuvable');
-    //     }
-    //     demandeConge.status = 'Declined';
-    //     return demandeConge.save();
-    // }
     async refuserDemandeConge(id: string): Promise<Leave> {
         const demandeConge = await this.leaveModel.findById(id);
         if (!demandeConge) {
@@ -181,7 +173,6 @@ export class CongeService {
         } else if (days === 0) {
             duration = 0;
         }
-        console.log(days , duration);
         return { days: days >= 0 ? days : 0, duration };
         }
 
@@ -191,7 +182,6 @@ export class CongeService {
         if (!findPersonnel) {
             throw new HttpException('Employee not found', 404);
         }
-        console.log(findPersonnel)
         const { startDate, endDate, startTime, endTime } = leaveData;
         const { days, duration } = await this.calculateLeaveDuration(startDate, endDate, startTime, endTime);
         const numOfDays = duration;
@@ -238,8 +228,6 @@ export class CongeService {
         for (const leave of leaves) {
             const startDate = leave.startDate;
             const endDate =leave.endDate;
-            console.log(leaveDate + "#" , startDate  + "#" , endDate);
-
             if (leaveDate >= startDate && leaveDate <= endDate) {
                 return true; 
             }
@@ -252,7 +240,6 @@ export class CongeService {
                 .findById(personalId)
                 .populate('leaves')
                 .exec();
-
             const personalLeaves = personal?.leaves ?? [];
             return personalLeaves;
         } catch (error) {

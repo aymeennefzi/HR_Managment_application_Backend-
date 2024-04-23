@@ -12,7 +12,6 @@ export class ProjectController {
     @Post()
     @UsePipes(new ValidationPipe())//enbales validation locally
    createUser(@Body()createuserdto:CreateProjectDto){
-    console.log(createuserdto);
     return this. projectService.createProject(createuserdto);
    }
    @Get()
@@ -36,27 +35,21 @@ export class ProjectController {
     if(!updatedUser) throw new HttpException('user not found',404)
     return updatedUser;
 }
-@Delete(':id')
-async deleteProject(@Param('id') id:string){
- const isValid= mongoose.Types.ObjectId.isValid(id)
- if(!isValid) throw new HttpException('INVALID id',400) 
- const deletedEntreprise=await this.projectService.deleteProject(id)
- console.log(deletedEntreprise)
-
-}
-@Patch(':id/statut')
-async updateStatut(
-  @Param('id') id: string,
-  @Body('statut') statut: TypeStatutProjet,
-): Promise<Project> {
-  return this.projectService.updateStatut(id, statut);
-}
+  @Delete(':id')
+  async deleteProject(@Param('id') id:string){
+  const isValid= mongoose.Types.ObjectId.isValid(id)
+  if(!isValid) throw new HttpException('INVALID id',400) 
+  const deletedEntreprise=await this.projectService.deleteProject(id)
+  }
+  @Patch(':id/statut')
+  async updateStatut(
+    @Param('id') id: string,
+    @Body('statut') statut: TypeStatutProjet,
+  ): Promise<Project> {
+    return this.projectService.updateStatut(id, statut);
+  }
  @Post('/by-tasks/jj')
-
- async getProjectsByTaskIds(@Body('taskIds') taskIds:  string[]) {
-   // Ensure taskIds is treated as an array, whether it comes as a single string or an array of strings
-  
-   
+ async getProjectsByTaskIds(@Body('taskIds') taskIds:  string[]) {   
    try {
      const projects = await this.projectService.findProjectsByTaskIds(taskIds);
      return projects;

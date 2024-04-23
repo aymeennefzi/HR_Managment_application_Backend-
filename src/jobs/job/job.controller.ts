@@ -11,10 +11,6 @@ export class JobController {
     async create(@Body() jobData: Job): Promise<Job> {
         return this.jobService.create(jobData);
       }
-    // @Get()
-    //   async findAll(): Promise<Job[]> {
-    //     return this.jobService.findAll();
-    //   }
     
   @Delete(':id')
   async deleteJob(@Param('id') jobId: string) {
@@ -31,9 +27,9 @@ export class JobController {
     return this.jobService.updateJob(jobId, updateJobDto);
   }
       
-      @Get(':id/title')
-      async getJobTitleById(@Param('id') id: string): Promise<string> {
-        const job = await this.jobService.findById(id); // Assurez-vous d'avoir une méthode findById dans votre service JobService
-        return job.title;
-      }
+  @Get(':id/title')
+  async getJobTitleById(@Param('id') id: string): Promise<string> {
+    const job = await this.jobService.findById(id); // Assurez-vous d'avoir une méthode findById dans votre service JobService
+    return job.title;
+  }
 }

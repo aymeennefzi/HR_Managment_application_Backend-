@@ -34,7 +34,5 @@ export class  UpdateEtatDto {
     @IsNotEmpty()
     @IsEnum(Etat)
     etat : Etat
-
-
 }
 

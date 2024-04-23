@@ -1,11 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy ,ExtractJwt} from "passport-jwt";
 import { User } from "./Shemas/User.shema";
 import { Model } from "mongoose";
-import { Request } from "express";
-import { Observable } from "rxjs";
 import { Request as RequestType } from 'express';
 
 
@@ -42,17 +40,4 @@ private static extractJWT(req: RequestType): string | null {
     }
     return null;
   }
-
-
-
 }
-
-// @Injectable()
-// export class AuthenticatedGuard implements CanActivate {
-//   canActivate(
-//     context: ExecutionContext,
-//   ): boolean | Promise<boolean> | Observable<boolean> {
-//     const request = context.switchToHttp().getRequest();
-//     return request.user; 
-//   }
-// }

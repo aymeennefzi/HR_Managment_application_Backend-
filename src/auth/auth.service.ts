@@ -246,23 +246,19 @@ async activateUser(userId: string): Promise<User> {
         return personnel.attendances;
     }
     async updateAttendanceList(personnelId: string, attend: UpdateAttendanceDto[]): Promise<void> {
-        console.log(attend);
         const attendanceList = await this.getAttendaces(personnelId);
         if (!attendanceList) {
             console.log('Impossible de récupérer la liste des présences.');
             return;
         }
-        console.log(attendanceList);
         for (const attendance of attendanceList) {
             for (const att of attend) {
                 const attendanceDate = new Date(attendance.date).setHours(0, 0, 0, 0);
                 const attDate = new Date(att.date).setHours(0, 0, 0, 0);
                 if (attendanceDate === attDate) {
                     attendance.status = att.status;
-                    console.log(attendance.status);
                     // Mettre à jour l'objet de présence
                     await attendance.save();
-                    console.log(attendance);
                 }
             }
         }
