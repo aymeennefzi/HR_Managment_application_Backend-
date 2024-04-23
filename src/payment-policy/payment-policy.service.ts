@@ -22,27 +22,33 @@ export class PaymentPolicyService {
     return this.paymentPolicyModel.find().exec();
   }
   
- 
+  async updatePayment(paymentId: string, updatePaymentDto: CreatePaymentPDto): Promise<PaymentP> {
+    // Récupérer le paiement existant
+    const existingPayment = await this.paymentPolicyModel.findById(paymentId);
+    
+    // Vérifier si le paiement existe
+    if (!existingPayment) {
+      throw new NotFoundException('Payment not found');
+    }
 
     // Créer un nouvel objet Payment avec les propriétés mises à jour
-    async updatePay(policyId: string, updatePolicyDto: CreatePaymentPDto): Promise<PaymentP> {
-      // Recherche du poste existant
-      const existingPolicy = await this.paymentPolicyModel.findOneAndUpdate(
-          { _id: policyId },
-          updatePolicyDto,
-          { new: true }
-      ).exec();
-  
-      // Si le poste n'est pas trouvé, lancer une exception
-      if (!existingPolicy) {
-          throw new NotFoundException(`Poste with id ${policyId} not found`);
-      }
-  
-      return existingPolicy;
+    const updatedPayment = await this.paymentPolicyModel.findByIdAndUpdate(
+      paymentId,
+      updatePaymentDto,
+      { new: true }
+    ).exec();
+
+    // Vérifier si le paiement a bien été mis à jour
+    if (!updatedPayment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    return updatedPayment;
   }
-  
+
   async findById(id: string): Promise<PaymentP | null> {
     return this.paymentPolicyModel.findById(id).exec();
   }
   
-  }  
+  
+}

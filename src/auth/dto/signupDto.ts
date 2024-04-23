@@ -61,6 +61,6 @@ export class signupDto{
   @IsNotEmpty()
   @IsNumber()
   uploadImg : string ;
-  
+
 
 }

@@ -275,15 +275,22 @@ async activateUser(userId: string): Promise<User> {
       // Enregistrez les modifications dans la base de données
       return await user.save();
     }
-    getUserById(id:string){
-      return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
-    }
-    async findUserByTaskId(taskId: string): Promise<User> {
-        const user = await this.userMosel.findOne({ tasks: taskId }).exec();
+    // getUserById(id:string){
+    //   return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
+    // }
+    // async findUserByTaskId(taskId: string): Promise<User> {
+    //     const user = await this.userMosel.findOne({ tasks: taskId }).exec();
+    //   }
+  getUserById(id:string){
+     return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
+   }
+     async findUserByTaskId(taskId: string): Promise<User> {
+         const user = await this.userMosel.findOne({ tasks: taskId }).exec();
         if (!user) {
             throw new NotFoundException('User with the given task ID not found');
         }
         return user;
+
     }
     async findByEmail(email: string): Promise<User> {
         const user = await this.userMosel.findOne({ email }).exec();
@@ -291,6 +298,6 @@ async activateUser(userId: string): Promise<User> {
         throw new NotFoundException('User not found');
         }
         return user;
-    }
+    }  
 }
 

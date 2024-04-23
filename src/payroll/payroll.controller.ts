@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpException, HttpStatus, NotFoundException, Pa
 import { CreatePayrollDto, EmployeeSalaryDto } from './dto/CreatePayroll.dto';
 import { PayrollService } from './payroll.service';
 import { Payroll } from './Schema/Payroll.schema';
-import { Cron } from '@nestjs/schedule';
+import { User } from 'src/auth/Shemas/User.shema';
 
 @Controller('payroll')
 export class PayrollController {
@@ -23,11 +23,6 @@ export class PayrollController {
     }
   }
 
- 
-
-  
-
-   
     @Post('/CreatePayroll')
     async createPayrollC(@Body() createPayrollDto: CreatePayrollDto,) {
       try {
@@ -82,7 +77,6 @@ export class PayrollController {
             return { message: error.message };
         }
     }
-    
   async triggerCron(): Promise<string> {
     await this.payrollService.handleCron();
     return 'CRON déclenché avec succès.';
@@ -96,6 +90,12 @@ export class PayrollController {
       return { error: error.message };
     }
   }
+
+
+  // @Get('with-post')
+  //   async getUsersWithPost(): Promise<User[]> {
+  //       return await this.payrollService.getUsersWithPost();
+  //   }
   @Post('/payrolls/:userId')
   async createPayrollAndAssociateWithUser(@Body() createPayrollDto: CreatePayrollDto, @Param('userId') userId: string) {
     try {
@@ -134,4 +134,15 @@ export class PayrollController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  @Get('getPayrollWithPayP/:id')
+    async getPayrollWithPaymentPolicy(@Param('id') payrollId: string): Promise<{  payroll: any, deductions: number[] }> {
+      try {
+        const payroll = await this.payrollService.getPayrollWithPaymentPolicy(payrollId);
+        return payroll;
+      } catch (error) {
+        throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+
+  
 }

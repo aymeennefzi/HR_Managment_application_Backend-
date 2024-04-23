@@ -77,10 +77,13 @@ import { Room } from 'src/Chats/models/room.model';
 
       @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Tasks }] })
       tasks:Tasks []; 
-      @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Teams'} )
-      teams:Teams ; 
+
+      @Prop({ type: mongoose.Schema.Types.ObjectId, ref: ()=>Teams} )
+      teams:Teams[] ; 
+      
       @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Performance }] )
       performances:Performance []; 
+      
       @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: ()=>Project }] )
       projects:Project []; 
 
@@ -134,6 +137,7 @@ import { Room } from 'src/Chats/models/room.model';
     
       @Prop({type: [{type: Types.ObjectId, ref: 'Room'}]})
       joinedRooms?: Room[];
+
   }
 
     export const  UserSchema=SchemaFactory.createForClass(User);

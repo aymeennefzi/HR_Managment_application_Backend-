@@ -27,10 +27,9 @@ import { Attendance, AttendanceSchema } from 'src/attendance/Schema/Attendance.s
       })
     }),
     MongooseModule.forFeature([
-      {name:User.name ,schema:UserSchema},
-     { name: 'Role', schema: RoleSchema },
-     {name:Attendance.name ,schema:AttendanceSchema},
-
+    {name:User.name ,schema:UserSchema},
+    { name: 'Role', schema: RoleSchema },
+    {name:Attendance.name ,schema:AttendanceSchema}
      ])
   ],
   controllers: [AuthController,Rolecontroller],

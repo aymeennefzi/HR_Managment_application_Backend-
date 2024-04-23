@@ -123,9 +123,6 @@ export class AuthController {
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
-// @Post('user-by-task')
-
-
 @Post('att/:personnelId')
   async updateAttendanceList(
     @Param('personnelId') personnelId: string,
@@ -174,7 +171,7 @@ async getAttendancesForUser(@Param('userId') userId: string): Promise<Attendance
       throw new NotFoundException('No attendances found for the user');
     }
     return attendances;
-}
+  }
 
 @Post('user-by-task/ahmed')
 async getUserByTaskId(@Body('taskId') taskId: string) {
