@@ -252,7 +252,65 @@ export class AttendanceService {
           throw new Error(`Unable to fetch users with attendances: ${error.message}`);
         }
     }
-      
+    // async generateAttendanceTableForMonth(): Promise<void> {
+    //     const personnelList = await this.userModel.find({ attendances: [] }).exec();
+    //     console.log('personnelList', personnelList);
+    //     const today = new Date();
+    //     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    //     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Le dernier jour du mois en cours
+    
+    //     for (const personnel of personnelList) {
+    //         const attendances = [];
+    //         for (let currentDate = new Date(firstDayOfMonth); currentDate <= lastDayOfMonth; currentDate.setDate(currentDate.getDate() + 1)) {
+    //             let attendance;
+    //             if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+    //                 // Jour de semaine - "approved" et "Présent"
+    //                 attendance = new this.attendanceModel({
+    //                       date: currentDate,
+    //                     etat: Etat.pending,
+    //                     status: AttendanceStatus.Absent,
+                       
+    //                 });
+    //             } else {
+    //                 // Week-end - "pending" et "Absent"
+    //                 attendance = new this.attendanceModel({
+    //                     date: currentDate,
+    //                     etat: Etat.approuved,
+    //                     status: AttendanceStatus.Present,
+    //                 });
+    //             }
+    //             await attendance.save();
+    //             attendances.push(attendance); // Stocker l'ID dans le tableau
+    //         }
+    //         personnel.attendances = attendances;
+    //         await personnel.save();
+    //     }
+    // }
+    
+    async generateAttendanceTableForMonth(): Promise<void> {
+        const personnelList = await this.userModel.find( { attendances: []  }).exec();
+        console.log('personnelList',personnelList)
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Le dernier jour du mois en cours
+    
+        for (const personnel of personnelList) {
+            const attendances = [];
+            for (let currentDate = new Date(firstDayOfMonth); currentDate <= lastDayOfMonth; currentDate.setDate(currentDate.getDate() + 1)) {
+                const attendance = new this.attendanceModel({
+                    date: currentDate,
+                    etat: Etat.pending,
+                    status: AttendanceStatus.Absent,
+                });
+                // Enregistrer la présence
+                await attendance.save();
+                attendances.push(attendance); // Stocker l'ID dans le tableau
+            }
+            personnel.attendances = attendances;
+            await personnel.save();
+        }
+    }
+    
     async calculateAttendanceDaysSalaire(personalId: string, startDate: Date, endDate: Date): Promise<{ presentDays: number; absentDays: number }> {
         let presentDays = 0;
         let absentDays = 0;

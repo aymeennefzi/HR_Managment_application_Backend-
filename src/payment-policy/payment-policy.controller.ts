@@ -16,7 +16,7 @@ export class PaymentPolicyController {
     async findAll(): Promise<PaymentP[]> {
       return this.paymentPolicyService.findAll();
     }
-    @Put(':id')
+    @Put('/put/:id')
   async updatePayment(@Param('id') paymentId: string, @Body() updatePaymentDto: CreatePaymentPDto): Promise<PaymentP> {
     try {
       return await this.paymentPolicyService.updatePayment(paymentId, updatePaymentDto);
@@ -27,4 +27,15 @@ export class PaymentPolicyController {
       throw error;
     }
   }
+
+  @Get('get/:id')
+  async findById(@Param('id') id: string): Promise<PaymentP> {
+    try {
+      const paymentPolicy = await this.paymentPolicyService.findById(id);
+      return paymentPolicy;
+    } catch (error) {
+      console.error('Error while finding payment policy by ID:', error);
+      return null;
+    }
+  }  
 }

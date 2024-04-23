@@ -12,6 +12,17 @@ export class AttendanceController {
     async generateAttendanceTableForWeek(): Promise<void> {
         await this.attendanceService.generateAttendanceTableForWeek1();
     }
+    @Post('/generate-monthly-table')
+    async generateMonthlyAttendanceTable(): Promise<{}> {
+      try {
+        await this.attendanceService.generateAttendanceTableForMonth();
+        return { message: 'Table de présence mensuelle générée avec succès.' };
+      } catch (error) {
+        // Si une erreur se produit lors de la génération de la table de présence, vous pouvez renvoyer une réponse d'erreur
+        // Par exemple, une réponse JSON avec un message d'erreur
+        return { error: 'Une erreur s\'est produite lors de la génération de la table de présence mensuelle.' };
+      }
+    }
 
     // @Cron('0 0 1 * *') // Exécuter à minuit le premier jour de chaque mois
     // async generateAttendanceTableForMonth() {

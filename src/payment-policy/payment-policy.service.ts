@@ -45,4 +45,10 @@ export class PaymentPolicyService {
 
     return updatedPayment;
   }
+
+  async findById(id: string): Promise<PaymentP | null> {
+    return this.paymentPolicyModel.findById(id).exec();
+  }
+  
+  
 }
