@@ -137,7 +137,7 @@ async deleteTask(id: string) {
         console.log(finishDate + "###"+ checkDate);
         console.log(finishDate.getTime() +"###"+ checkDate.getTime());
 
-        if (finishDate.getTime()>= checkDate.getTime()) {
+        if (finishDate.getTime()<= checkDate.getTime()) {
           taskCount++;
       }
     }

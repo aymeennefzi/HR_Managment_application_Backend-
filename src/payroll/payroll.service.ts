@@ -29,7 +29,7 @@ export class PayrollService {
         private readonly CongeSer: CongeService
 
       ) {
-        this.handleCron();
+       
 
       }
     
@@ -153,49 +153,7 @@ export class PayrollService {
     
         return newPayroll;
       }
-    
-    
-     
 
-  //     async createDefaultPayrollsForNewUsers(): Promise<void> {
-        
-
-  //       const currentDate = new Date();
-
-  //      const usersWithoutPayroll = await this.userModel.find(
-  //  {
-  //           $or: [
-  //           { payrolls: { $eq: null } }, 
-  //           { payrolls: { $size: 0 } }, 
-  //         ],
-         
-        
-       
-  //      }).exec();
-      
-      
-  //       for (const user of usersWithoutPayroll) {
-         
-  //           // Créer un nouveau payroll avec des valeurs par défaut
-  //           const newPayroll = new this.PayrollModel({
-  //               month: new Date().getMonth() + 1,
-  //               year: new Date().getFullYear(),
-  //               basicSalary: 0,
-  //               deductions: 0,
-  //               netSalary: 0,
-  //               user:user._id,  // Associer l'utilisateur au payroll
-  //           });
-            
-  //           await user.payrolls.push(newPayroll._id);
-           
-           
-  //           await user.save();
-  //           await newPayroll.save();
-            
-            
-            
-  //       }
-  //   }
   async createDefaultPayrollsForNewUsers(): Promise<void> {
     const currentDate = new Date();
 

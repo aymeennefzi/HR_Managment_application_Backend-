@@ -299,5 +299,11 @@ async activateUser(userId: string): Promise<User> {
         }
         return user;
     }  
+    async getIdfromToken(token:string):Promise<String>{
+      const decodedToken:any =jwt.verify(token,'bahazaidi') ;
+      let id = decodedToken.id;
+      return id;
+    
+     }
 }
 

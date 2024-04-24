@@ -20,22 +20,36 @@ export class MissionService {
     @InjectModel(Mission.name) private missionModel: Model<Mission>, @InjectModel(User.name)private UserModel: Model<User>,
     private enterpriseService: EntreprisesService,private TaskService:TaskService,private UserService:AuthService
   ) {
-    this.startCronJob();
+    this.startCronJobForMissions();
+    this.startCronJobForEmployees();
   }
 
   async createMission(createMissionDto: CreateMissionDto): Promise<Mission> {
     const createdMission = new this.missionModel(createMissionDto);
+    // const enterpriseId = await this.enterpriseSedrvice.createEntreprise(createMissionDto.enterprise);
+    // createdMission.lieu = enterpriseId;
     return createdMission.save();
   }
 
- 
+  // async findAll(): Promise<Mission[]> {
+  //   return this.missionModel.find().exec();
+  // }
   async assignUserToMission(missionId: string, userEmail: string): Promise<Mission> {
-    const user = await this.UserModel.findOne({ email: userEmail }).exec(); 
-    const mission = await this.missionModel.findById(missionId);
-    let id = user._id.toString();
+    const user = await this.UserModel.findOne({ email: userEmail }).exec();    const mission = await this.missionModel.findById(missionId);
+    console.log(userEmail);
+    console.log(mission);
+    const employee =await this.UserModel.findById(user._id);
     const   datemission =  mission.startDate;
-    mission.assignedTo.push(user._id); 
+    console.log(datemission);
+    const isdisponible =await this.TaskService.isUserDisponible(user._id,datemission);
+    console.log("isdisponible",isdisponible);
+    const isdisponiblemission=await this.isUserAvailableForMission(user._id,datemission) ;
+    console.log("isdisponiblemission",isdisponiblemission);
+        if(isdisponible && isdisponiblemission){
+    mission.assignedTo.push(employee); 
     return mission.save();
+  }else{console.log("Cet employé est indisponible dans cette date")
+    throw new HttpException('Cet employé est indisponible dans cette date',400)}
 }
   
 async updateMission(missionId: string, updateMissionDto: UpdateMissionDto): Promise<Mission> {
@@ -76,11 +90,15 @@ async deleteMission(missionId: string): Promise<void> {
 }
 async deleteMultipleMissions(ids: string[]):Promise<void> {
     try {
+    console.log(ids);
+      // Supprimer les missions en utilisant l'opérateur $in pour spécifier plusieurs IDs
       const result = await this.missionModel.deleteMany({ _id: { $in: ids } }).exec();
+    
     } catch (error) {
-      console.log(error);
+      throw new Error(`Impossible de supprimer les missions : ${error}`);
     }
   }
+
 async findAll(pageNumber: number, pageSize: number): Promise<Mission[]> {
   const skip = (pageNumber - 1) * pageSize;
   return this.missionModel.find().skip(skip).limit(pageSize).exec();
@@ -97,7 +115,7 @@ async assignClientToMission(missionId: string, clientId: string): Promise<Missio
 
   return mission.save();
 }
-startCronJob() {
+startCronJobForMissions() {
   const job = new CronJob('* * * * *', async () => {
     await this.checkAndUpdateMissions();
   });
@@ -124,7 +142,9 @@ async checkAndUpdateMissions() {
   }
 }
 
-async createAndAssignMission(createMissionDto: CreateMissionDto, clientId: string): Promise<Mission> {
+async createAndAssignMission(createMissionDto: CreateMissionDto, token: string): Promise<Mission> {
+  const clientId= await this.UserService.getIdfromToken(token);
+
   const client = await this.UserModel.findById(clientId);
 
   if (!client) {
@@ -136,10 +156,13 @@ async createAndAssignMission(createMissionDto: CreateMissionDto, clientId: strin
 
   return createdMission.save();
 }
-async getMissionByEmployeeId(employeeId: string): Promise<Mission> {
+async getMissionByEmployeeId(token: string): Promise<Mission> {
+  const employeeId= await this.UserService.getIdfromToken(token);
+  console.log(employeeId);
+
+
   const mission = await this.missionModel
     .findOne({ assignedTo: employeeId })
-    .populate('assignedTo')
     .exec();
 
   if (!mission) {
@@ -163,24 +186,57 @@ async getUsersAvailable(date: string): Promise<User[]> {
 }
 
 async isUserAvailableForMission(employeeId: string, date: string): Promise<boolean> {
-  try {
-    const missions = await this.missionModel.find({ assignedTo: employeeId }).exec();
-    let missionCount = 0;
+  const missions = await this.missionModel.find({ assignedTo: employeeId }).exec();
+  console.log("assignedto",missions);
+  let missionCount = 0;
+  for (const mission of missions) {
+    const startDate = new Date(mission.startDate);
+    const endDate = new Date(mission.endDate);
+    const checkDate = new Date(date);
+    console.log("date",checkDate);
+    console.log("startdate",startDate.getTime());
+    console.log("checkdate",checkDate.getTime());
+    console.log("enddate",endDate.getTime());
 
-    for (const mission of missions) {
-      const startDate = new Date(mission.startDate);
-      const endDate = new Date(mission.endDate);
-      const checkDate = new Date(date);
-
-      if (startDate.getTime() <= checkDate.getTime() && endDate.getTime() >= checkDate.getTime()) {
-        missionCount++;
-      }
+    if (startDate.getTime() <= checkDate.getTime() && endDate.getTime() >= checkDate.getTime()) {
+      
+     
+      missionCount++;
     }
-
-    return missionCount === 0;
-  } catch (error) {
-    throw new HttpException('Failed to check user availability for mission.', HttpStatus.INTERNAL_SERVER_ERROR);
   }
+  return missionCount===0
+
 }
+async getmissionsbyclient(token: string): Promise<Mission[]> {
+  const id_client= await this.UserService.getIdfromToken(token);
+  console.log(id_client);
+  const missions = await this.missionModel
+    .find({ client: id_client })
+    .exec();
+
+  if (!missions || missions.length === 0) {
+    throw new NotFoundException('Aucune mission trouvée pour cet client employé');
+  }
+
+  return missions;
+}
+startCronJobForEmployees() {
+  const job = new CronJob('0 0 * * *', async () => {
+    await this.unassignEmployeesFromCancelledOrCompletedMissions();
+  });
+
+  job.start();
+}
+
+async unassignEmployeesFromCancelledOrCompletedMissions() {
+  const missions = await this.missionModel.find({
+    status: { $in: [MissionStatus.Canceled, MissionStatus.Completed] }
+  }).exec();
+
+  for (const mission of missions) {
+    mission.assignedTo = []; // Désaffectez tous les employés de la mission
+    await mission.save();
+  }}
+
 
 }
