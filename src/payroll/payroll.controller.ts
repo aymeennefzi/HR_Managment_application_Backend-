@@ -23,6 +23,11 @@ export class PayrollController {
     }
   }
 
+  
+
+  
+
+   
     @Post('/CreatePayroll')
     async createPayrollC(@Body() createPayrollDto: CreatePayrollDto,) {
       try {
@@ -84,7 +89,7 @@ export class PayrollController {
   @Post('generate')
   async generatePayroll() {
     try {
-      await this.payrollService.schedulePayrollGeneration();
+      await this.payrollService.handleCron();
       return { message: 'La génération de la paie a été planifiée avec succès.' };
     } catch (error) {
       return { error: error.message };
@@ -143,6 +148,4 @@ export class PayrollController {
         throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
-
-  
 }

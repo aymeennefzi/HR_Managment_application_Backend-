@@ -1,3 +1,4 @@
+
 import { Controller, Post, Body, HttpException, Get, Delete, Param, Put, NotFoundException, Query } from '@nestjs/common';
 import { MissionService } from './mission.service';
 import { Mission } from './Shemas/Mission.Shema';
@@ -9,19 +10,19 @@ import { User } from 'src/auth/Shemas/User.shema';
 export class MissionController {
   constructor(private readonly missionService: MissionService) {}
 
-  @Post('assign-user')
+  @Post('')
   async assignUserToMission(
-    @Body() data: { missionId: string, useremail: string }): Promise<Mission> {
+    @Body() data: { missionId: string, useremail: string }
+  ): Promise<Mission> {
     try {
       const { missionId, useremail } = data;
-      let email=useremail.toString()
-      const mission = await this.missionService.assignUserToMission(missionId, email);
+      const mission = await this.missionService.assignUserToMission(missionId, useremail);
       return mission;
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
   }
-  @Post()
+  @Post('create')
   async createMission(@Body() createMissionDto: CreateMissionDto): Promise<Mission> {
     try {
       return await this.missionService.createMission(createMissionDto);
@@ -72,7 +73,6 @@ export class MissionController {
 
     return existingMission.save();
   }
-
 @Get("/deletemissions")
 async delemissions(@Query('missions') missions :string[]):Promise<void>{
   console.log(missions);
@@ -119,6 +119,16 @@ async deleteMultipleMissions(@Body('ids') ids: string[]): Promise <void> {
     
 
 }
+@Get('client/:id')
+  async getMissionsByClient(@Param('id') id_client: string): Promise<Mission[]> {
+    const missions = await this.missionService.getmissionsbyclient(id_client);
+    
+    if (!missions || missions.length === 0) {
+      throw new NotFoundException('Aucune mission trouvée pour cet client employé');
+    }
+
+    return missions;
+  }
     @Get('available-users')
 async getAvailableUsers(@Body('date') date: string): Promise<User[]> {
   return this.missionService.getUsersAvailable(date);

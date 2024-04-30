@@ -153,49 +153,6 @@ export class PayrollService {
     
         return newPayroll;
       }
-    
-    
-     
-
-  //     async createDefaultPayrollsForNewUsers(): Promise<void> {
-        
-
-  //       const currentDate = new Date();
-
-  //      const usersWithoutPayroll = await this.userModel.find(
-  //  {
-  //           $or: [
-  //           { payrolls: { $eq: null } }, 
-  //           { payrolls: { $size: 0 } }, 
-  //         ],
-         
-        
-       
-  //      }).exec();
-      
-      
-  //       for (const user of usersWithoutPayroll) {
-         
-  //           // Créer un nouveau payroll avec des valeurs par défaut
-  //           const newPayroll = new this.PayrollModel({
-  //               month: new Date().getMonth() + 1,
-  //               year: new Date().getFullYear(),
-  //               basicSalary: 0,
-  //               deductions: 0,
-  //               netSalary: 0,
-  //               user:user._id,  // Associer l'utilisateur au payroll
-  //           });
-            
-  //           await user.payrolls.push(newPayroll._id);
-           
-           
-  //           await user.save();
-  //           await newPayroll.save();
-            
-            
-            
-  //       }
-  //   }
   async createDefaultPayrollsForNewUsers(): Promise<void> {
     const currentDate = new Date();
 
@@ -210,6 +167,11 @@ export class PayrollService {
             $nin: [null, []], // Poste n'est ni null ni un tableau vide
         },
     }).exec();
+
+    if (usersWithoutPayroll.length === 0) {
+        console.log("La liste des utilisateurs sans paie est vide.");
+        return; // Retourne simplement si la liste est vide
+    }
 
     for (const user of usersWithoutPayroll) {
         // Créer un nouveau payroll avec des valeurs par défaut
@@ -228,6 +190,7 @@ export class PayrollService {
         await newPayroll.save();
     }
 }
+
 async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, deductions: number[] }> {
   try {
     // Recherche de la payroll avec l'ID spécifié
@@ -258,45 +221,65 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
     throw new HttpException('Error retrieving payroll', 500);
   }
 }
-    
 
-     @Cron('0 */2 * * * *')      
-      async handleCron() {
-        await this.schedulePayrollGeneration();
-        
-      }
-      async schedulePayrollGeneration() {
-        const paymentPolicy = await this.PayPolicyModel.findOne().sort({ createdAt: -1 });
-        if (!paymentPolicy || !paymentPolicy.paymentDay) {
-            throw new Error('PaymentPolicy, la date ou le jour de paiement est manquant.');
-        }
-    
-        const today = new Date();
-        console.log('Today',today)
-        const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth() + 1; // Les mois commencent à 0, donc on ajoute 1
-        const paymentDay = paymentPolicy.paymentDay;
-    
-        const targetDate = new Date(currentYear, currentMonth - 1, paymentDay);
-       
+    @Cron('0 */2 * * * *')
+    async handleCron() {
+    console.log('Cron job started');
 
-        // Vérifier si la date actuelle correspond à la date spécifiée dans paymentDay
-        if (today.getDate() === paymentDay && today.getMonth() + 1 === currentMonth) {
-            // Calculer les dates de début et de fin
-            const startDate = new Date(targetDate);
-            // startDate.setDate(startDate.getDate() - 30); // Soustraire 30 jours
-            startDate.setDate(startDate.getDate() - 24); 
-            const endDate = new Date(targetDate);
-            console.log('startDate   endDate',startDate,endDate)
-
-            await this.createDefaultPayrollsForNewUsers();
-            // Générer la paie
-           await this.generatePayroll(startDate, endDate);
-        }
+    const paymentPolicy = await this.PayPolicyModel.findOne().sort({ createdAt: -1 });
+    if (!paymentPolicy || !paymentPolicy.paymentDay) {
+        throw new Error('PaymentPolicy, la date ou le jour de paiement est manquant.');
     }
-    
+    const today = new Date();
+    console.log('Today:', today);
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // Les mois commencent à 0, donc on ajoute 1
+    const paymentDay = paymentPolicy.paymentDay;
+    console.log('Current Year:', currentYear, 'Current Month:', currentMonth, 'Payment Day:', paymentDay);
+
+    const targetDate = new Date(currentYear, currentMonth - 1, paymentDay);
+
+    // Vérifier si la date actuelle correspond à la date spécifiée dans paymentDay
+    if (today.getDate() === paymentDay && today.getMonth() + 1 === currentMonth) {
+        console.log('Today matches payment day and month');
+        // Calculer les dates de début et de fin
+        const startDate = new Date(targetDate);
+        // startDate.setDate(startDate.getDate() - 30); // Soustraire 30 jours
+        startDate.setDate(startDate.getDate() - 24);
+        const endDate = new Date(targetDate);
+        console.log('Start Date:', startDate, 'End Date:', endDate);
+
+        const usersWithoutPayroll = await this.userModel.find({
+            $or: [
+                { payrolls: { $eq: null } },
+                { payrolls: { $size: 0 } },
+            ],
+            role: 'Employee', // Filtre par rôle "employee"
+            poste: {
+                $exists: true,
+                $nin: [null, []], // Poste n'est ni null ni un tableau vide
+            },
+        }).exec();
+        console.log('Users without payroll:', usersWithoutPayroll);
+
+        if (usersWithoutPayroll.length > 0) {
+            console.log('Creating default payrolls for new users...');
+            await this.createDefaultPayrollsForNewUsers();
+            console.log('Default payrolls created.');
+
+            console.log('Generating payroll...');
+            await this.generatePayroll(startDate, endDate);
+            console.log('Payroll generated.');
+        } else {
+            console.log('No new users added with default payroll.');
+        }
+    } else {
+        console.log('Today does not match payment day and month. Skipping payroll generation.');
+    }
+
+    console.log('Cron job finished');
+} 
     async calculateNetSalary(id: string,startDate: Date, endDate: Date): Promise<Payroll>{
-      
       const payrollWithUser = await this.PayrollModel
       .findById(id)
       .populate({
@@ -306,7 +289,7 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
               { path: 'leaves' }
           ]
       })
-.exec();
+      .exec();
       console.log('payrollWithUser:', payrollWithUser); // Ajouter cette ligne
       let excessDays=0;
       let absentDays=0;
@@ -418,7 +401,19 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
               return usersWithPost;
           }
           
-          
+          async deletePayroll(payrollId: string): Promise<Payroll> {
+            try {
+              const deletedPayroll = await this.PayrollModel.findByIdAndDelete(payrollId);
+              
+              if (!deletedPayroll) {
+                throw new NotFoundException(`Fiche de paie avec l'ID ${payrollId} non trouvée.`);
+              }
+              
+              return deletedPayroll;
+            } catch (error) {
+              throw new Error(`Erreur lors de la suppression de la fiche de paie avec l'ID ${payrollId}.`);
+            }
+          }
     
             async generatePayroll(startDate: Date, endDate: Date): Promise<void> {
               const users = await this.getUsersWithPost(); 

@@ -20,10 +20,6 @@ export class PostService {
         const createdPoste = new this.PosteModel(CreatePosteDto);
         return createdPoste.save();
       }
-    
-    //   async getAllPosts(): Promise<Poste[]> {
-    //     return this.PosteModel.find().populate('Users','name').exec();
-    //   }
     async getAllPosts(): Promise<Poste[]> {
         return this.PosteModel.find().populate({
           path: 'Users',
@@ -35,7 +31,6 @@ export class PostService {
         if (!post) {
           throw new Error('Poste introuvable');
         }
-      
         const users = await this.userModel.find({ _id: { $in: userIds } });
         
         if (!users || users.length !== userIds.length) {
@@ -49,23 +44,6 @@ export class PostService {
         post.Users.push(...users);
         await post.save();
       }
-      
-
-
-      // async assignUserToPost(userId:string, postId: string): Promise<void> {
-      //   const user = await this.userModel.findById(userId);
-      //   const post = await this.PosteModel.findById(postId);
-      //   if (!user) {
-      //     throw new Error('Utilisateur introuvable');
-      //   }
-      //   if (!post) {
-      //     throw new Error('Poste introuvable');
-      //   }
-      //   user.poste = post;
-      //   await user.save();
-      //   post.Users.push(user);
-      //   await post.save();
-      // }
       async updatePoste(posteId: string, updatePosteDto: CreatePostDto): Promise<Poste> {
         const updatedPoste = await this.PosteModel.findByIdAndUpdate(posteId, updatePosteDto, { new: true });
         if (!updatedPoste) {
@@ -74,27 +52,19 @@ export class PostService {
         }
         return updatedPoste;
       }
-
-
       async getPostById(id: string): Promise<Poste> {
         const post = await this.PosteModel.findById(id);
-    
         if (!post) {
           throw new NotFoundException(`Post with ID ${id} not found`);
         }
-    
         return post;
       }
-
-
       async deletePost(id: string): Promise<void> {
         const result = await this.PosteModel.deleteOne(this.getPostById(id));
-    
         if (result == null) {
           throw new NotFoundException(`Post with ID ${id} not found`);
         }
       }
-
       async getUsersWithNoPost(): Promise<{ id: number; firstName: string; lastName: string }[]> {
         const usersWithNoPost = await this.userModel.aggregate([
           {
@@ -116,28 +86,19 @@ export class PostService {
             },
           },
         ]);
-    
         return usersWithNoPost;
       }
-
-
       async deletePoste(posteId: string): Promise<void> {
         // 1. Supprimer le Poste
         await this.PosteModel.findByIdAndDelete(posteId).exec();
-    
         // 2. Retirer le Poste des Utilisateurs associés
         const usersWithPoste = await this.userModel.find({ poste: posteId }).exec();
-    
         for (const user of usersWithPoste) {
             // Retirer le poste de l'utilisateur
             user.poste = undefined; 
             user.payrolls=undefined;// Ou null, selon votre modèle
             await user.save();
         }
-    
-        // 3. Enregistrez les Utilisateurs Mis à Jour
-        // Notez que si vous avez beaucoup d'utilisateurs, vous pourriez vouloir optimiser cela avec des opérations par lot
-    
         console.log(`Poste ${posteId} supprimé et retiré des utilisateurs associés.`);
     }
     async findPosteByPostName(postName: string): Promise<Poste> {

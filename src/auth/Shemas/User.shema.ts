@@ -11,8 +11,6 @@ import { Payroll } from 'src/payroll/Schema/Payroll.schema';
 import { Message } from 'src/Chats/models/message.model';
 import { Room } from 'src/Chats/models/room.model';
 
-
-
 @Schema({
     timestamps: true,
   })
@@ -137,7 +135,5 @@ import { Room } from 'src/Chats/models/room.model';
     
       @Prop({type: [{type: Types.ObjectId, ref: 'Room'}]})
       joinedRooms?: Room[];
-
   }
-
-    export const  UserSchema=SchemaFactory.createForClass(User);
+export const  UserSchema=SchemaFactory.createForClass(User);

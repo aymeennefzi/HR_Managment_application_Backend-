@@ -209,11 +209,7 @@ async activateUser(userId: string): Promise<User> {
     async getAllUsers(): Promise<User[]> {
     return this.userMosel.find().exec();
     }
-    async getUserByToken(token:string):Promise<User>{
-      const decodedToken:any =jwt.verify(token,'bahazaidi') ;
-      const user = await this.userMosel.findOne({ _id:decodedToken.id })
-      return user;
-    }
+    
     async getSoldesConges(id : string): Promise<number>{
         try {
             const personnel = await this.userMosel.findById(id);
@@ -299,5 +295,16 @@ async activateUser(userId: string): Promise<User> {
         }
         return user;
     }  
+    async getUserByToken(token:string):Promise<User>{
+      const decodedToken:any =jwt.verify(token,'bahazaidi') ;
+      const user = await this.userMosel.findOne({ _id:decodedToken.id })
+      return user;
+    }
+    async getIdfromToken(token:string):Promise<String>{
+      const decodedToken:any =jwt.verify(token,'bahazaidi') ;
+      let id = decodedToken.id;
+      return id;
+    
+     }
 }
 

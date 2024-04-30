@@ -105,13 +105,7 @@ export class AuthController {
   async getAllUsers(): Promise<User[]> {
     return this.authservice.getAllUsers();
   }
-  @Get('userbytoken')
-  @UseGuards(AuthGuard())
-  async getUserByToken(@Req() request: Request): Promise<User> {
-    const token = request.headers['authorization'].split(' ')[1];
-    const user = await this.authservice.getUserByToken(token);
-    return user;
-  }
+  
   @Get('/allusers')
   async getuserbyid(): Promise<User[]>{
     return await this.authservice.getusers1();
@@ -197,4 +191,11 @@ async findByEmail(@Param('email') email: string) {
     throw new NotFoundException(error.message);
   }
 }
+@Get('userbytoken')
+  @UseGuards(AuthGuard())
+  async getUserByToken(@Req() request: Request): Promise<User> {
+    const token = request.headers['authorization'].split(' ')[1];
+    const user = await this.authservice.getUserByToken(token);
+    return user;
+  }
 }

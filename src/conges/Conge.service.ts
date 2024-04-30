@@ -209,7 +209,6 @@ export class CongeService {
         return users;
       }
 
-   
     async getUsersWithLeaves(): Promise<{ name: string; leaves: Leave[] }[]> {
         const usersWithLeaves = await this.personnelModel
           .find()
