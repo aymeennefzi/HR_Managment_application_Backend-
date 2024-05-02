@@ -41,7 +41,7 @@ import { CongeService } from 'src/conges/Conge.service';
     ]),
   ],
   controllers: [PostController,PaymentPolicyController, PayrollController],
-  providers: [ PostService,PaymentPolicyService,PayrollService,AttendanceService,AuthService,JwtService,MailerService,Roleservice,CongeService],
+  providers: [ PostService,PaymentPolicyService,PayrollService,AttendanceService,AuthService,JwtService,MailerService,Roleservice,CongeService ],
   exports:[]
         
 })

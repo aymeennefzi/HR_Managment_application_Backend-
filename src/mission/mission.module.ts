@@ -21,6 +21,7 @@ import { Leave, LeaveSchema } from 'src/conges/Schema/Leaves.schema';
 import { Roleservice } from 'src/auth/Role.service';
 import { Role, RoleSchema } from 'src/auth/Shemas/Roles.Shema';
 import { Attendance, AttendanceSchema } from 'src/attendance/Schema/Attendance.schema';
+import { AttendanceService } from 'src/attendance/attendance.service';
 
 
 @Module({
@@ -40,6 +41,6 @@ import { Attendance, AttendanceSchema } from 'src/attendance/Schema/Attendance.s
     AuthModule,
   ],
   controllers: [MissionController],
-  providers: [MissionService,EntreprisesService,ProjectService, TaskService,CongeService,AuthService,JwtService,MailerService,Roleservice],
+  providers: [MissionService,EntreprisesService,ProjectService, TaskService,CongeService,AuthService,JwtService,MailerService,Roleservice , AttendanceService ],
 })
 export class MissionModule {}

@@ -23,11 +23,6 @@ export class PayrollController {
     }
   }
 
-  
-
-  
-
-   
     @Post('/CreatePayroll')
     async createPayrollC(@Body() createPayrollDto: CreatePayrollDto,) {
       try {
@@ -82,14 +77,14 @@ export class PayrollController {
             return { message: error.message };
         }
     }
-  async triggerCron(): Promise<string> {
+/*   async triggerCron(): Promise<string> {
     await this.payrollService.handleCron();
     return 'CRON déclenché avec succès.';
-  }
+  } */
   @Post('generate')
   async generatePayroll() {
     try {
-      await this.payrollService.handleCron();
+      await this.payrollService.schedulePayrollGeneration();
       return { message: 'La génération de la paie a été planifiée avec succès.' };
     } catch (error) {
       return { error: error.message };
@@ -128,17 +123,7 @@ export class PayrollController {
   }
 
 
-  @Get('/withUsers')
-  async getUsersWithPayrolls(): Promise<any> {
-    try {
-      const User = await this.payrollService.getUsersWithPayrolls();
-      console.log('get avec succes',User)
-      return User;
-    } catch (error) {
-      console.error('Error retrieving payrolls with users and poste:', error);
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
+ 
   @Get('getPayrollWithPayP/:id')
     async getPayrollWithPaymentPolicy(@Param('id') payrollId: string): Promise<{  payroll: any, deductions: number[] }> {
       try {
@@ -148,4 +133,6 @@ export class PayrollController {
         throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
+
+  
 }

@@ -14,10 +14,7 @@ export class Application extends Document {
 
   @Prop({ required: true , type: String })
   cv: string;
-
-  
-
   // Ajoutez d'autres propriétés au besoin
 }
-
 export const ApplicationSchema = SchemaFactory.createForClass(Application);
+

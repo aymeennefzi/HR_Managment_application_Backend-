@@ -11,10 +11,8 @@ import { ResetPasswordDto } from './dto/ResetPasswordDto';
 import { Role } from './Shemas/Roles.Shema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { UpdateAttendanceDto } from 'src/attendance/dto/Attendance.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Attendance } from 'src/attendance/Schema/Attendance.schema';
 import mongoose from 'mongoose';
 
 @Controller('auth')
@@ -117,17 +115,17 @@ export class AuthController {
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
-@Post('att/:personnelId')
-  async updateAttendanceList(
-    @Param('personnelId') personnelId: string,
-    @Body() attend: UpdateAttendanceDto[],
-  ): Promise<void> {
-    try {
-      await this.authservice.updateAttendanceList(personnelId, attend);
-    } catch (error) {
-      throw new NotFoundException("Impossible de mettre à jour la liste de présence.");
-    }
-  }
+// @Post('att/:personnelId')
+//   async updateAttendanceList(
+//     @Param('personnelId') personnelId: string,
+//     @Body() attend: UpdateAttendanceDto[],
+//   ): Promise<void> {
+//     try {
+//       await this.authservice.updateAttendanceList(personnelId, attend);
+//     } catch (error) {
+//       throw new NotFoundException("Impossible de mettre à jour la liste de présence.");
+//     }
+//   }
 
 @Post('uploadImage/:userId')
 @UseInterceptors(FileInterceptor('file', {
@@ -157,15 +155,6 @@ async uploadPhoto1(@UploadedFile() file: Express.Multer.File, @Param('userId') u
   
   return user.save();
 }
-
-@Get(':userId')
-async getAttendancesForUser(@Param('userId') userId: string): Promise<Attendance[]> {
-  const attendances = await this.authservice.getPersonnelWithAttendances(userId);
-    if (!attendances || attendances.length === 0) {
-      throw new NotFoundException('No attendances found for the user');
-    }
-    return attendances;
-  }
 
 @Post('user-by-task/ahmed')
 async getUserByTaskId(@Body('taskId') taskId: string) {
@@ -198,4 +187,17 @@ async findByEmail(@Param('email') email: string) {
     const user = await this.authservice.getUserByToken(token);
     return user;
   }
+  @Get('Costumer/NewClient') // Changement du chemin pour éviter les conflits
+    async getNewCustomersThisMonth(): Promise<{ newCustomers: number }> {
+        const newCustomers = await this.authservice.getNewCustomersThisMonth();
+        return { newCustomers };
+    }
+
+
+
+    @Get('Employee/NewEmloyee') // Changement du chemin pour éviter les conflits
+    async getNewEmplosThisMonth(): Promise<{ newEmployees: number }> {
+        const newEmployees = await this.authservice.getNewEmployyesThisMonth();
+        return { newEmployees };
+    }
 }

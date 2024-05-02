@@ -8,8 +8,6 @@ import { Teams } from 'src/teams/schema/Teams.schema';
 import { Project } from 'src/project/schema/Project.schema';
 import { Poste } from 'src/payroll/Schema/Poste.schema';
 import { Payroll } from 'src/payroll/Schema/Payroll.schema';
-import { Message } from 'src/Chats/models/message.model';
-import { Room } from 'src/Chats/models/room.model';
 
 @Schema({
     timestamps: true,
@@ -121,8 +119,7 @@ import { Room } from 'src/Chats/models/room.model';
       @Prop()
       total : number ;
       
-      @Prop()
-      accepted : number ;
+      
       
       @Prop()
       declined : number ;
@@ -130,10 +127,8 @@ import { Room } from 'src/Chats/models/room.model';
       @Prop()
       clientId: string;
     
-      @Prop({type: [{type: Types.ObjectId, ref: 'Message'}]})
-      messages?: Message[];
+      
     
-      @Prop({type: [{type: Types.ObjectId, ref: 'Room'}]})
-      joinedRooms?: Room[];
+     
   }
 export const  UserSchema=SchemaFactory.createForClass(User);

@@ -1,4 +1,3 @@
-
 import { Controller, Post, Body, HttpException, Get, Delete, Param, Put, NotFoundException, Query } from '@nestjs/common';
 import { MissionService } from './mission.service';
 import { Mission } from './Shemas/Mission.Shema';
@@ -112,6 +111,7 @@ async deleteMultipleMissions(@Body('ids') ids: string[]): Promise <void> {
   @Get('employee/:employeeId')
   async getMissionByEmployeeId(@Param('employeeId') employeeId: string): Promise<Mission> {
     const mission = await this.missionService.getMissionByEmployeeId(employeeId);
+    console.log(mission);
     if (!mission) {
       throw new NotFoundException('Mission non trouvée pour cet employé');
     }

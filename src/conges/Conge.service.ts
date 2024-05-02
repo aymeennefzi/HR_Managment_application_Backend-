@@ -1,33 +1,59 @@
-import {HttpException, Injectable, NotFoundException} from "@nestjs/common";
+import {HttpException, Injectable, InternalServerErrorException, NotFoundException} from "@nestjs/common";
 import {InjectModel} from '@nestjs/mongoose'
 import {Model} from 'mongoose'
 import {CreateLeaveDto} from "./dto/createConge.dto";
-import {Leave, TimeOfDay} from "./Schema/Leaves.schema";
+import {Leave, LeaveType, TimeOfDay} from "./Schema/Leaves.schema";
 import {User} from "../auth/Shemas/User.shema";
 import { AuthService } from "src/auth/auth.service";
+import {Etat } from "src/attendance/Schema/Attendance.schema";
+import { AttendanceService } from "src/attendance/attendance.service";
 
 @Injectable()
 export class CongeService {
-    constructor(@InjectModel(Leave.name) private leaveModel:Model<Leave> , private readonly personelService :AuthService , @InjectModel(User.name) private personnelModel:Model<User>) {
+    constructor(@InjectModel(Leave.name) private leaveModel:Model<Leave> , private readonly atttendS : AttendanceService, private readonly personelService :AuthService , @InjectModel(User.name) private personnelModel:Model<User>) {
     }
+    
     async accepterDemandeConge(id: string): Promise<Leave> {
         const demandeConge = await this.leaveModel.findById(id);
         if (!demandeConge) {
-            throw new NotFoundException('Demande de congé introuvable');
+          throw new NotFoundException('Demande de congé introuvable');
         }
-        demandeConge.status = 'Approved';
+      
         const personnelId = demandeConge.personnel;
+        console.log(personnelId);
         const personnel = await this.personnelModel.findById(personnelId);
         if (!personnel) {
-            throw new NotFoundException('Employé introuvable');
+          throw new NotFoundException('Employé introuvable');
         }
-        // Utiliser calculateLeaveDuration pour obtenir la durée du congee
+      
         const { duration } = await this.calculateLeaveDuration(demandeConge.startDate, demandeConge.endDate, demandeConge.startTime, demandeConge.endTime);
-        personnel.soldeConges -= duration;
-        personnel.accepted += 1; 
+        if (demandeConge.leaveType === LeaveType.SickLeave) {
+          if (duration > personnel.soldeMaladie) {
+            throw new Error('Solde de congés maladie insuffisant');
+          }
+          personnel.soldeMaladie -= duration;
+        } else {
+          if (duration > personnel.soldeConges) {
+            throw new Error('Solde de congés insuffisant');
+          }
+          personnel.soldeConges -= duration;
+        }
+        demandeConge.status = 'Approved';
         await Promise.all([demandeConge.save(), personnel.save()]);
+        const startDate = new Date(demandeConge.startDate);
+        console.log(startDate)
+        const endDate = new Date(demandeConge.endDate);
+        console.log(endDate)
+        const attendances = await this.atttendS.getPersonnelWithAttendances(personnelId.toString())
+          
+          for (const attendance of attendances) {
+            attendance.etat = Etat.approuved;
+            attendance.status = 1;
+            await attendance.save();
+          }
+          
         return demandeConge;
-    }
+      }
     async refuserDemandeConge(id: string): Promise<Leave> {
         const demandeConge = await this.leaveModel.findById(id);
         if (!demandeConge) {
@@ -42,7 +68,7 @@ export class CongeService {
           throw new NotFoundException('Employé introuvable');
         }
       
-        personnel.declined += 1; // Incrémenter l'attribut declined
+        //personnel.declined += 1; 
       
         await Promise.all([demandeConge.save(), personnel.save()]);
       
@@ -187,7 +213,7 @@ export class CongeService {
         const numOfDays = duration;
 
         if (leaveData.leaveType === 'paid leave') {
-            const soldeConges = await this.personelService.getSoldesConges(personnelId);
+            const soldeConges = await this.getSoldesConges(personnelId);
 
             if (numOfDays > soldeConges) {
                 throw new NotFoundException('Solde de congés insuffisant');
@@ -197,8 +223,10 @@ export class CongeService {
         const savedConge = await newConge.save();
         await this.personnelModel.updateOne({ _id: personnelId }, { $push: { leaves: savedConge._id } });
         return savedConge;
+
         };
     
+        
     async getAllUsersWithConges1(): Promise<User[]> {
         const users = await this.personnelModel.find().populate(['leaves']).exec();
       
@@ -218,6 +246,7 @@ export class CongeService {
         return usersWithLeaves.map((user) => ({
           name: user.firstName + ' ' + user.lastName,
           id : user._id,
+          image :user.profileImage ,
           leaves: user.leaves,
         }));
       }
@@ -243,6 +272,17 @@ export class CongeService {
             return personalLeaves;
         } catch (error) {
             throw new Error('Une erreur s\'est produite lors de la récupération des congés.');
+        }
+    }
+    async getSoldesConges(id : string): Promise<number>{
+        try {
+            const personnel = await this.personnelModel.findById(id);
+            if (!personnel){
+                throw new NotFoundException('personnel introuvable')
+            }
+            return personnel.soldeConges ;
+        }catch (error){
+            throw new InternalServerErrorException('Erreur lors de la récuperation du solde de congés')
         }
     }
 }

@@ -210,55 +210,7 @@ async activateUser(userId: string): Promise<User> {
     return this.userMosel.find().exec();
     }
     
-    async getSoldesConges(id : string): Promise<number>{
-        try {
-            const personnel = await this.userMosel.findById(id);
-            if (!personnel){
-                throw new NotFoundException('personnel introuvable')
-            }
-            return personnel.soldeConges ;
-        }catch (error){
-            throw new InternalServerErrorException('Erreur lors de la récuperation du solde de congés')
-        }
-    }
-    async getPersonnelWithAttendances1(idP : string): Promise<User> {
-        const personnel = this.userMosel.findById(idP).populate(['attendances']);
-        if (!personnel) {
-            throw new NotFoundException('personnel not found');
-        }
-        return personnel ;
-    }  
-    async getPersonnelWithAttendances(userId: string): Promise<Attendance[]> {
-      const user = await this.userMosel.findById(userId).populate('attendances').exec();
-      
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-    
-      return user.attendances;
-    }
-    async getAttendaces(idp: string): Promise<Attendance[]> {
-        const personnel = await this.userMosel.findById(idp).populate(['attendances']);
-        return personnel.attendances;
-    }
-    async updateAttendanceList(personnelId: string, attend: UpdateAttendanceDto[]): Promise<void> {
-        const attendanceList = await this.getAttendaces(personnelId);
-        if (!attendanceList) {
-            console.log('Impossible de récupérer la liste des présences.');
-            return;
-        }
-        for (const attendance of attendanceList) {
-            for (const att of attend) {
-                const attendanceDate = new Date(attendance.date).setHours(0, 0, 0, 0);
-                const attDate = new Date(att.date).setHours(0, 0, 0, 0);
-                if (attendanceDate === attDate) {
-                    attendance.status = att.status;
-                    // Mettre à jour l'objet de présence
-                    await attendance.save();
-                }
-            }
-        }
-    }
+   
     async uploadProfileImage(userId: string, filename: string): Promise<User> {
       const user = await this.userMosel.findById(userId);
       if (!user) {
@@ -271,12 +223,6 @@ async activateUser(userId: string): Promise<User> {
       // Enregistrez les modifications dans la base de données
       return await user.save();
     }
-    // getUserById(id:string){
-    //   return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
-    // }
-    // async findUserByTaskId(taskId: string): Promise<User> {
-    //     const user = await this.userMosel.findOne({ tasks: taskId }).exec();
-    //   }
   getUserById(id:string){
      return this.userMosel.findById(id).populate(['tasks']).populate(['projects'])
    }
@@ -306,5 +252,45 @@ async activateUser(userId: string): Promise<User> {
       return id;
     
      }
+     async getNewCustomersThisMonth(): Promise<number> {
+      // Récupérer la date du premier jour du mois en cours
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      
+      // Récupérer la date du dernier jour du mois en cours
+      const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  
+      // Récupérer tous les employés ayant un rôle de client
+      const clients = await this.userMosel.find({ role: 'Client' });
+  console.log("count",clients)
+  console.log("Count",firstDayOfMonth)
+
+      // Filtrer les clients qui ont rejoint ce mois-ci
+      const newCustomersThisMonth = clients.filter(client => {
+        const joinDate = new Date(client.dateEntree);
+        return joinDate >= firstDayOfMonth && joinDate <= lastDayOfMonth;
+      });
+
+    console.log("newCustomersThisMonth.length",newCustomersThisMonth.length)
+
+      // Retourner le nombre de nouveaux clients ce mois-ci
+      return newCustomersThisMonth.length;
+    }
+
+    async getNewEmployyesThisMonth(): Promise<number> {
+      // Récupérer la date du premier jour du mois en cours
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      
+      // Récupérer la date du dernier jour du mois en cours
+      const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  
+      const Employees = await this.userMosel.find({ role: 'Employee' })
+      const newEmployeesThisMonth = Employees.filter(employee => {
+        const joinDate = new Date(employee.dateEntree);
+        return joinDate >= firstDayOfMonth && joinDate <= lastDayOfMonth;
+      });
+
+      return newEmployeesThisMonth.length;
+    }
+
 }
 

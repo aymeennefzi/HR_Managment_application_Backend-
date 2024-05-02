@@ -1,7 +1,7 @@
-import {Injectable} from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import {InjectModel} from "@nestjs/mongoose";
 import {Model} from "mongoose";
-import {UpdateEtatDto} from "./dto/Attendance.dto";
+import {UpdateAttendanceDto, UpdateEtatDto} from "./dto/Attendance.dto";
 import { Attendance, AttendanceStatus, Etat } from './Schema/Attendance.schema';
 import { User } from 'src/auth/Shemas/User.shema';
 import { AuthService } from 'src/auth/auth.service';
@@ -11,6 +11,33 @@ import * as moment from 'moment';
 export class AttendanceService {
     constructor(@InjectModel(Attendance.name) private attendanceModel: Model<Attendance>, @InjectModel(User.name) private userModel: Model<User> , private readonly authService : AuthService,private readonly personnelservice:AuthService) {
     }
+    // async generateAttendanceTableForWeek(): Promise<void> {
+    //     const personnelList = await this.userModel.find().exec();
+    
+    //     const today = new Date();
+    //     const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (today.getDay() - 1)); // Start from Monday
+    //     const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6); // End on Sunday
+    
+    //     for (const personnel of personnelList) {
+    //         const attendances = [];
+    //         for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+    //             const formattedDate = currentDate.toISOString().split('T')[0]; // Extract YYYY-MM-DD part
+    //             const dateParts = formattedDate.split('-');
+    //             const formattedDateWithoutTime = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
+    //             const attendance = new this.attendanceModel({
+    //                 date: formattedDateWithoutTime,                 
+
+    //                 etat: Etat.pending,
+    //                 status: AttendanceStatus.Absent,
+    //             });
+    //             // Save the attendance
+    //             await attendance.save();
+    //             attendances.push(attendance); // Store the ID in the array
+    //         }
+    //         personnel.attendances = attendances;
+    //         await personnel.save();
+    //     }
+    // }
     async generateAttendanceTableForWeek(): Promise<void> {
         const personnelList = await this.userModel.find().exec();
     
@@ -19,21 +46,25 @@ export class AttendanceService {
         const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6); // End on Sunday
     
         for (const personnel of personnelList) {
-            const attendances = [];
+            const attendances = personnel.attendances || []; // Existing attendances
+    
             for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
                 const formattedDate = currentDate.toISOString().split('T')[0]; // Extract YYYY-MM-DD part
                 const dateParts = formattedDate.split('-');
                 const formattedDateWithoutTime = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
-                const attendance = new this.attendanceModel({
-                    date: formattedDateWithoutTime,                 
-
+                const existingAttendance = attendances.find(att => att.date.getTime() === currentDate.getTime());
+              
+                if (!existingAttendance) {
+                  const attendance = new this.attendanceModel({
+                    date: formattedDateWithoutTime,
                     etat: Etat.pending,
                     status: AttendanceStatus.Absent,
-                });
-                // Save the attendance
-                await attendance.save();
-                attendances.push(attendance); // Store the ID in the array
-            }
+                  });
+                  attendances.push(attendance);
+                  await attendance.save();
+                }
+              }
+    
             personnel.attendances = attendances;
             await personnel.save();
         }
@@ -62,14 +93,10 @@ export class AttendanceService {
             await personnel.save();
         }
     }
-    
-    
-    
-    
-    
+
     async getNotApprovedAttendances(personnelId: string): Promise<Attendance[]> {
         try {
-            const attendanceList = await this.personnelservice.getAttendaces(personnelId);
+            const attendanceList = await this.getAttendaces(personnelId);
 
             if (!attendanceList) {
                 console.log('Impossible de récupérer la liste des présences.');
@@ -84,9 +111,10 @@ export class AttendanceService {
             return [];
         }
     }
+
     async getApprovedAttendances(personnelId: string): Promise<Attendance[]> {
         try {
-            const attendanceList = await this.authService.getAttendaces(personnelId);
+            const attendanceList = await this.getAttendaces(personnelId);
 
             if (!attendanceList) {
                 console.log('Impossible de récupérer la liste des présences.');
@@ -101,13 +129,10 @@ export class AttendanceService {
         }
     }
 
-
     async getApprovedAttendancesSalaire(personnelId: string, startDate: Date, endDate: Date): Promise<Attendance[]> {
         try {
-            const attendanceList = await this.authService.getAttendaces(personnelId); // Assurez-vous que getAttendaces accepte les paramètres de date
+            const attendanceList = await this.getAttendaces(personnelId); // Assurez-vous que getAttendaces accepte les paramètres de date
             const ApprovedAttendances: Attendance[] = [];
-           
-
     for (const attendance of attendanceList) {
         const attendanceDate = new Date(attendance.date);
         const newEndDate = new Date(endDate);
@@ -123,7 +148,9 @@ export class AttendanceService {
         } catch (error) {
             console.log('Une erreur s\'est produite lors de la récupération de la liste des présences :', error);
             return [];
-        }}
+        }
+    }
+
     async validatePresence(personnelId: string, attend: UpdateEtatDto[]): Promise<void> {
         const attendanceList = await this.getNotApprovedAttendances(personnelId);
         if (!attendanceList) {
@@ -140,12 +167,12 @@ export class AttendanceService {
                 const attDate = new Date(att.date).setHours(0, 0, 0, 0);
                 if (attendanceDate === attDate) {
                     attendance.etat = att.etat;
-                    // Mettre à jour l'objet de présence
                     await attendance.save();
                 }
             }
         }
     }
+
     async calculateAttendanceDays(personalId:string): Promise<object> {
         let presentDays = 0;
         let absentDays = 0;
@@ -162,16 +189,15 @@ export class AttendanceService {
         }
         return { presentDays, absentDays };
     }
+
     async getEmployeesWithAttendances(): Promise<User[]> {
         return this.userModel.find().populate('attendances').exec();
-      }
+    }
 
-      async getAllEmployeesWithAttendances(): Promise<User[]> {
+    async getAllEmployeesWithAttendances(): Promise<User[]> {
         try {
-            
             const startDateOfWeek = moment().startOf('isoWeek').toDate(); // Lundi de la semaine en cours
             const endDateOfWeek = moment().endOf('isoWeek').subtract(1, 'day').toDate(); // Samedi de la semaine en cours
-          // Récupérer tous les utilisateurs avec leurs présences pour la semaine en cours
           const usersWithAttendances = await this.userModel
             .find()
             .populate({
@@ -184,8 +210,8 @@ export class AttendanceService {
         } catch (error) {
           throw new Error(`Unable to fetch users with attendances: ${error.message}`);
         }
-      }
-      async getEmployeeWithAttendancesById(userId: string): Promise<User | null> {
+    }
+    async getEmployeeWithAttendancesById(userId: string): Promise<User | null> {
         try {
             const userWithAttendances = await this.userModel.findById(userId)
                 .populate({
@@ -200,47 +226,12 @@ export class AttendanceService {
     }
     async getUsersWithAttendances(): Promise<User[]> {
         try {
-          const usersWithAttendances = await this.userModel.find({}, { firstName: 1, lastName: 1, attendances: 1 }).populate('attendances').exec();
+          const usersWithAttendances = await this.userModel.find({}, { firstName: 1, lastName: 1, profileImage : 1 , attendances: 1 }).populate('attendances').exec();
           return usersWithAttendances;
         } catch (error) {
           throw new Error(`Unable to fetch users with attendances: ${error.message}`);
         }
     }
-    // async generateAttendanceTableForMonth(): Promise<void> {
-    //     const personnelList = await this.userModel.find({ attendances: [] }).exec();
-    //     console.log('personnelList', personnelList);
-    //     const today = new Date();
-    //     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    //     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Le dernier jour du mois en cours
-    
-    //     for (const personnel of personnelList) {
-    //         const attendances = [];
-    //         for (let currentDate = new Date(firstDayOfMonth); currentDate <= lastDayOfMonth; currentDate.setDate(currentDate.getDate() + 1)) {
-    //             let attendance;
-    //             if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-    //                 // Jour de semaine - "approved" et "Présent"
-    //                 attendance = new this.attendanceModel({
-    //                       date: currentDate,
-    //                     etat: Etat.pending,
-    //                     status: AttendanceStatus.Absent,
-                       
-    //                 });
-    //             } else {
-    //                 // Week-end - "pending" et "Absent"
-    //                 attendance = new this.attendanceModel({
-    //                     date: currentDate,
-    //                     etat: Etat.approuved,
-    //                     status: AttendanceStatus.Present,
-    //                 });
-    //             }
-    //             await attendance.save();
-    //             attendances.push(attendance); // Stocker l'ID dans le tableau
-    //         }
-    //         personnel.attendances = attendances;
-    //         await personnel.save();
-    //     }
-    // }
-    
     async generateAttendanceTableForMonth(): Promise<void> {
         const personnelList = await this.userModel.find( { attendances: []  }).exec();
         console.log('personnelList',personnelList)
@@ -264,15 +255,12 @@ export class AttendanceService {
             await personnel.save();
         }
     }
-    
     async calculateAttendanceDaysSalaire(personalId: string, startDate: Date, endDate: Date): Promise<{ presentDays: number; absentDays: number }> {
         let presentDays = 0;
         let absentDays = 0;
         let attendanceList =  await this.getApprovedAttendancesSalaire(personalId, startDate, endDate);
         for (const attendance of attendanceList) {
-            // Vérifier si l'état de l'assiduité est "Approuvé"
             if (attendance.etat === 'Approved') {
-                // Incrémenter le nombre de jours présents en fonction du statut
                 if (attendance.status === 1) {
                     presentDays++;
                 } else if (attendance.status === 0.5) {
@@ -284,11 +272,48 @@ export class AttendanceService {
                 }
 
             } else if (attendance.etat === 'Declined') {
-                // Si l'assiduité est rejetée, incrémenter le nombre de jours absents
                 absentDays++;
             }
         }
        
         return { presentDays, absentDays };
+    }
+    async getPersonnelWithAttendances1(idP : string): Promise<User> {
+        const personnel = this.userModel.findById(idP).populate(['attendances']);
+        if (!personnel) {
+            throw new NotFoundException('personnel not found');
+        }
+        return personnel ;
+    }  
+    async getPersonnelWithAttendances(userId: string): Promise<Attendance[]> {
+      const user = await this.userModel.findById(userId).populate('attendances').exec();
+      
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+    
+      return user.attendances;
+    }
+    async getAttendaces(idp: string): Promise<Attendance[]> {
+        const personnel = await this.userModel.findById(idp).populate(['attendances']);
+        return personnel.attendances;
+    }
+    async updateAttendanceList(personnelId: string, attend: UpdateAttendanceDto[]): Promise<void> {
+        const attendanceList = await this.getAttendaces(personnelId);
+        if (!attendanceList) {
+            console.log('Impossible de récupérer la liste des présences.');
+            return;
+        }
+        for (const attendance of attendanceList) {
+            for (const att of attend) {
+                const attendanceDate = new Date(attendance.date).setHours(0, 0, 0, 0);
+                const attDate = new Date(att.date).setHours(0, 0, 0, 0);
+                if (attendanceDate === attDate) {
+                    attendance.status = att.status;
+                    // Mettre à jour l'objet de présence
+                    await attendance.save();
+                }
+            }
+        }
     }
 }

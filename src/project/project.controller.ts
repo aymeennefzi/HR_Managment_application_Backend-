@@ -57,4 +57,26 @@ export class ProjectController {
      throw error;
    }
  }
+ @Get('/newP/new-this-month')
+ async getNewProjectsThisMonth(): Promise<{ newProjects: number }> {
+   const newProjects = await this.projectService.getNewProjectsThisMonth();
+   return { newProjects };
+ }
+
+
+ @Get('FinishedP/finished-this-month')
+  async getFinishedProjectsThisMonth(): Promise<{ finishedProjects: number }> {
+    const finishedProjects = await this.projectService.getFinishedProjectsThisMonth();
+    return { finishedProjects };
+  }
+
+  @Get('Project/current-month')
+  async getProjectsForCurrentMonth(): Promise<{ name: string, progress: TypeStatutProjet, duration: number }[]> {
+    return await this.projectService.getProjectsForCurrentMonth();
+  }
+  @Get('Status/project-count-by-status')
+  async getProjectsCountByStatus(): Promise<{ [key in TypeStatutProjet]: number }> {
+    return await this.projectService.getProjectsCountByStatus();
+  }
+
 }

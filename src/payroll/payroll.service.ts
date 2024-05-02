@@ -29,7 +29,7 @@ export class PayrollService {
         private readonly CongeSer: CongeService
 
       ) {
-        this.handleCron();
+       
 
       }
     
@@ -61,35 +61,40 @@ export class PayrollService {
     
       async getAllPayrollsWithUsersAndPoste(): Promise<any[]> {
         try {
-          const payrolle = await this.PayrollModel
-            .find()
-            .populate({
-              path: 'user',
-              select: 'firstName lastName email Matricule',
-              populate: { path: 'poste', 
-              select: 'PostName' ,},
-            }).lean() // Convertit les résultats en objets JavaScript simples
-            .select({
-              _id: 1,
-              netSalary: 1,
-              'user.firstName': "",
-              'user.lastName': "",
-              'user.email': "",
-              'user.Matricule': "",
-              'user.poste.PostName': "",
-            })
-            .exec();
+            const payrolle = await this.PayrollModel
+                .find()
+                .populate({
+                    path: 'user',
+                    select: 'firstName lastName email Matricule', // Select only the fields from the user document
+                    populate: {
+                        path: 'poste', // Populate the poste field of the user document
+                        select: 'PostName',
+                    }
+                })
+                .lean()
+                .exec();
     
-            
-           
-           console.log('Payrolls',payrolle) 
-      
-          return payrolle;
+            console.log('Payrolls', payrolle);
+    
+            return payrolle.map(payroll => ({
+                _id: payroll._id,
+                netSalary: payroll.netSalary,
+                user: {
+                    _id: payroll.user._id,
+                    firstName: payroll.user.firstName,
+                    lastName: payroll.user.lastName,
+                    email: payroll.user.email,
+                    Matricule: payroll.user.Matricule,
+                    poste: {
+                        PostName: payroll.user.poste.PostName
+                    }
+                }
+            }));
         } catch (error) {
-          console.error('Error retrieving payrolls with users and poste:', error);
-          throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+            console.error('Error retrieving payrolls with users and poste:', error);
+            throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-      }
+    }
 
 
       async createPayroll(createPayrollDto: CreatePayrollDto): Promise<any> {
@@ -141,21 +146,15 @@ export class PayrollService {
         if (!user) {
           throw new Error('User not found');
         }
-    
-        
         user.payrolls.push(newPayroll._id);
         console.log(user)
         await user.save();
-    
-       
         await newPayroll.save();
-        
-    
         return newPayroll;
       }
+
   async createDefaultPayrollsForNewUsers(): Promise<void> {
     const currentDate = new Date();
-
     const usersWithoutPayroll = await this.userModel.find({
         $or: [
             { payrolls: { $eq: null } },
@@ -167,12 +166,6 @@ export class PayrollService {
             $nin: [null, []], // Poste n'est ni null ni un tableau vide
         },
     }).exec();
-
-    if (usersWithoutPayroll.length === 0) {
-        console.log("La liste des utilisateurs sans paie est vide.");
-        return; // Retourne simplement si la liste est vide
-    }
-
     for (const user of usersWithoutPayroll) {
         // Créer un nouveau payroll avec des valeurs par défaut
         const newPayroll = new this.PayrollModel({
@@ -183,102 +176,45 @@ export class PayrollService {
             netSalary: 0,
             user: user._id,  // Associer l'utilisateur au payroll
         });
-
         await user.payrolls.push(newPayroll._id);
-
         await user.save();
         await newPayroll.save();
     }
 }
 
-async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, deductions: number[] }> {
-  try {
-    // Recherche de la payroll avec l'ID spécifié
-    const payroll = await this.PayrollModel
-      .findById(payrollId)
-      .populate({
-        path: 'user',
-        model: 'User', // Assurez-vous que c'est le bon nom du modèle
-      })
-      .exec();
 
-    // Vérifier si la payroll existe
-    if (!payroll) {
-      console.log('Payroll not found');
-      throw new HttpException('Payroll not found', 404);
-    }
 
-    // Récupérer les informations de la politique de paiement
-    const paymentPolicy = await this.PaymentPSer.findAll();
-    const taxRate = (paymentPolicy[0].taxRate / 100) * payroll.basicSalary;
-    const socialSecurityRate = (paymentPolicy[0].socialSecurityRate / 100) * payroll.basicSalary;
-    const otherDeductions = paymentPolicy[0].otherDeductions;
-    const deductions: number[] = [taxRate, socialSecurityRate, otherDeductions];
-
-    return { payroll, deductions };
-  } catch (error) {
-    console.error('Error retrieving payroll:', error);
-    throw new HttpException('Error retrieving payroll', 500);
-  }
-}
-
-    @Cron('0 */2 * * * *')
-    async handleCron() {
-    console.log('Cron job started');
-
-    const paymentPolicy = await this.PayPolicyModel.findOne().sort({ createdAt: -1 });
-    if (!paymentPolicy || !paymentPolicy.paymentDay) {
-        throw new Error('PaymentPolicy, la date ou le jour de paiement est manquant.');
-    }
-    const today = new Date();
-    console.log('Today:', today);
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1; // Les mois commencent à 0, donc on ajoute 1
-    const paymentDay = paymentPolicy.paymentDay;
-    console.log('Current Year:', currentYear, 'Current Month:', currentMonth, 'Payment Day:', paymentDay);
-
-    const targetDate = new Date(currentYear, currentMonth - 1, paymentDay);
-
-    // Vérifier si la date actuelle correspond à la date spécifiée dans paymentDay
-    if (today.getDate() === paymentDay && today.getMonth() + 1 === currentMonth) {
-        console.log('Today matches payment day and month');
-        // Calculer les dates de début et de fin
-        const startDate = new Date(targetDate);
-        // startDate.setDate(startDate.getDate() - 30); // Soustraire 30 jours
-        startDate.setDate(startDate.getDate() - 24);
-        const endDate = new Date(targetDate);
-        console.log('Start Date:', startDate, 'End Date:', endDate);
-
-        const usersWithoutPayroll = await this.userModel.find({
-            $or: [
-                { payrolls: { $eq: null } },
-                { payrolls: { $size: 0 } },
-            ],
-            role: 'Employee', // Filtre par rôle "employee"
-            poste: {
-                $exists: true,
-                $nin: [null, []], // Poste n'est ni null ni un tableau vide
-            },
-        }).exec();
-        console.log('Users without payroll:', usersWithoutPayroll);
-
-        if (usersWithoutPayroll.length > 0) {
-            console.log('Creating default payrolls for new users...');
-            await this.createDefaultPayrollsForNewUsers();
-            console.log('Default payrolls created.');
-
-            console.log('Generating payroll...');
-            await this.generatePayroll(startDate, endDate);
-            console.log('Payroll generated.');
-        } else {
-            console.log('No new users added with default payroll.');
+     //  @Cron('0 */2 * * * *')      
+     // async handleCron() {
+       // await this.schedulePayrollGeneration();
+        
+     // }  
+      @Cron('0 */2 * * * *')   
+      async schedulePayrollGeneration() {
+        const paymentPolicy = await this.PayPolicyModel.findOne().sort({ createdAt: -1 });
+        if (!paymentPolicy || !paymentPolicy.paymentDay) {
+            throw new Error('PaymentPolicy, la date ou le jour de paiement est manquant.');
         }
-    } else {
-        console.log('Today does not match payment day and month. Skipping payroll generation.');
-    }
+        const today = new Date();
+        console.log('Today',today)
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth() + 1; // Les mois commencent à 0, donc on ajoute 1
+        const paymentDay = paymentPolicy.paymentDay;
+        const targetDate = new Date(currentYear, currentMonth - 1, paymentDay);
+        if (today.getDate() === paymentDay && today.getMonth() + 1 === currentMonth) {
+            // Calculer les dates de début et de fin
+            const startDate = new Date(targetDate);
+            // startDate.setDate(startDate.getDate() - 30); // Soustraire 30 jours
+            startDate.setDate(startDate.getDate() - 30); 
+            const endDate = new Date(targetDate);
+            console.log('startDate   endDate',startDate,endDate)
 
-    console.log('Cron job finished');
-} 
+            await this.createDefaultPayrollsForNewUsers();
+            // Générer la paie
+           await this.generatePayroll(startDate, endDate);
+        }
+    }
+    
     async calculateNetSalary(id: string,startDate: Date, endDate: Date): Promise<Payroll>{
       const payrollWithUser = await this.PayrollModel
       .findById(id)
@@ -289,45 +225,34 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
               { path: 'leaves' }
           ]
       })
-      .exec();
+.exec();
       console.log('payrollWithUser:', payrollWithUser); // Ajouter cette ligne
       let excessDays=0;
       let absentDays=0;
       let presentDays=0;
       let PaymentPolicy: PaymentP[] = await this.PaymentPSer.findAll();
       console.log('PaymentPolicy:', PaymentPolicy); // Ajouter cette ligne
-      
       let NetSalary: number = 0; // Initialiser netSalary à 0
-  
       if (payrollWithUser) {
         let UserP=payrollWithUser.user;
         console.log("UserP",UserP)
-        
           let PosteUser = payrollWithUser.user.poste;
-          
           console.log('PosteUser:', PosteUser); // Ajouter cette ligne
- 
-                   const result = await this.AttendanceS.calculateAttendanceDaysSalaire(payrollWithUser.user._id,startDate, endDate);
-                  
+                  const result = await this.AttendanceS.calculateAttendanceDaysSalaire(payrollWithUser.user._id,startDate, endDate);
                   console.log('result:', result); // Ajouter cette ligne
-  
                   presentDays = result.presentDays;
-                   absentDays = result.absentDays;
+                  absentDays = result.absentDays;
 
-                   NetSalary=PosteUser.BasicSalary;
-                   console.log(NetSalary)
-                  
+                  NetSalary=PosteUser.BasicSalary;
+                  console.log(NetSalary)
                   for (const leave of payrollWithUser.user.leaves) {
                     console.log('user.leave:',leave)
                       const paymentPolicy = PaymentPolicy.find(policy => {
-                        return policy.allowedDays.has(leave.leaveType);
-                        
+                        return policy.allowedDays.has(leave.leaveType);  
                       });
-
                       console.log('leave:', leave); // Ajouter cette ligne
                       console.log('paymentPolicy:', paymentPolicy); // Ajouter cette ligne
                           console.log('leave.status' ,leave.status)
-                     
                           if (leave.status === 'Approved') {
                               let Congedays = this.CongeSer.calculateLeaveDuration(leave.startDate, leave.endDate, leave.startTime, leave.endTime)
                               console.log('Congedays:', await Congedays); // Ajouter cette ligne
@@ -338,10 +263,9 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
                                     absentDays -= (await Congedays).duration;
                                   }
                                   else{
-                                    absentDays = 0;
-                                  }
-                                  
-                                  console.log('absentday,',absentDays)
+                                  absentDays = 0;
+                              }  
+                              console.log('absentday,',absentDays)
                               } else {
                                 if(absentDays>=(await Congedays).duration ){
                                   absentDays -= (await Congedays).duration;
@@ -349,38 +273,23 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
                                 else{
                                   absentDays = 0;
                                 }
-                                
-                                   console.log('absentday,',absentDays)
-                                // if((await Congedays).days>allowedDuration){
-                                   excessDays = (await Congedays).days -allowedDuration;
-                                 
-                                  console.log('ecess', excessDays)
-                                  NetSalary -=(PosteUser.BasicSalary / 30) * excessDays *paymentPolicy.exessDayPay;
-                                  console.log('netsalaryecess',NetSalary )
-                                 
-                                 
+                                console.log('absentday,',absentDays)
+                                excessDays = (await Congedays).days -allowedDuration;
+                                console.log('ecess', excessDays)
+                                NetSalary -=(PosteUser.BasicSalary / 30) * excessDays *paymentPolicy.exessDayPay;
+                                console.log('netsalaryecess',NetSalary )      
                               }
-                              
-                          // }
-                      
                   }}
                   console.log('ABSENTDaysRestant',absentDays)
                   NetSalary -= (PosteUser.BasicSalary / 30) * absentDays;
                   NetSalary -= ((PaymentPolicy[0].taxRate/100)*PosteUser.BasicSalary+(PaymentPolicy[0].socialSecurityRate/100)*PosteUser.BasicSalary+PaymentPolicy[0].otherDeductions)
-                  
                   payrollWithUser.netSalary = NetSalary;
-                  
                   payrollWithUser.deductions=((PaymentPolicy[0].taxRate/100)*PosteUser.BasicSalary+(PaymentPolicy[0].socialSecurityRate/100)*PosteUser.BasicSalary+PaymentPolicy[0].otherDeductions);
-                 
                   console.log('DEDUCTIONS,',payrollWithUser.deductions);
                   payrollWithUser.basicSalary = PosteUser.BasicSalary;
-
-
-                  
                   await payrollWithUser.save();
                   console.log('payrollWithUser',payrollWithUser )
-                  return payrollWithUser;
-                  
+                  return payrollWithUser; 
               }
       
      
@@ -401,19 +310,7 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
               return usersWithPost;
           }
           
-          async deletePayroll(payrollId: string): Promise<Payroll> {
-            try {
-              const deletedPayroll = await this.PayrollModel.findByIdAndDelete(payrollId);
-              
-              if (!deletedPayroll) {
-                throw new NotFoundException(`Fiche de paie avec l'ID ${payrollId} non trouvée.`);
-              }
-              
-              return deletedPayroll;
-            } catch (error) {
-              throw new Error(`Erreur lors de la suppression de la fiche de paie avec l'ID ${payrollId}.`);
-            }
-          }
+          
     
             async generatePayroll(startDate: Date, endDate: Date): Promise<void> {
               const users = await this.getUsersWithPost(); 
@@ -461,7 +358,38 @@ async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, de
       
         return payrollsOnly;
       }
+      async getPayrollWithPaymentPolicy(payrollId: string): Promise<{ payroll: any, deductions: number[] }> {
+        try {
+          // Recherche de la payroll avec l'ID spécifié
+          const payroll = await this.PayrollModel
+            .findById(payrollId)
+            .populate({
+              path: 'user',
+              model: 'User', 
+              populate: { path: 'poste', model: 'Poste' },// Assurez-vous que c'est le bon nom du modèle
+            })
+            .exec();
       
+          // Vérifier si la payroll existe
+          if (!payroll) {
+            console.log('Payroll not found');
+            throw new HttpException('Payroll not found', 404);
+          }
+      
+          // Récupérer les informations de la politique de paiement
+          const paymentPolicy = await this.PaymentPSer.findAll();
+          const taxRate = (paymentPolicy[0].taxRate / 100) * payroll.basicSalary;
+          const socialSecurityRate = (paymentPolicy[0].socialSecurityRate / 100) * payroll.basicSalary;
+          const otherDeductions = paymentPolicy[0].otherDeductions;
+          const deductions: number[] = [taxRate, socialSecurityRate, otherDeductions];
+      
+          return { payroll, deductions };
+        } catch (error) {
+          console.error('Error retrieving payroll:', error);
+          throw new HttpException('Error retrieving payroll', 500);
+        }
+      }
+         
 
               
    

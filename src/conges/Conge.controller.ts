@@ -35,14 +35,12 @@ export class CongeController {
             throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
     @Put('approve/:id/accept')
     async accepterDemandeConge(@Param('id') id: string): Promise<Leave> {
-        try {
+       
             const demandeConge = await this.congeService.accepterDemandeConge(id);
             return demandeConge;
-        } catch (error) {
-            throw new NotFoundException(error.message);
-        }
     }
     @Put(':id/refus')
     async refuserDemandeConge(@Param('id') id: string): Promise<Leave> {

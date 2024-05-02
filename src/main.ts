@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 import * as cookieParser from 'cookie-parser'
 import * as express from 'express';
 
+
 const fs = require('fs');
 async function bootstrap() {
   dotenv.config();
@@ -14,12 +15,12 @@ async function bootstrap() {
     origin: ['http://localhost:4200'],
     credentials:  true,
     methods: 'GET,PUT,POST,DELETE',
-    allowedHeaders: 'Content-Type, Accept',
+    allowedHeaders: ['Content-Type', 'Authorization'],
     
   });
+
   app.use(cookieParser());
   const expressApp = express();
 }
-
 
 bootstrap();

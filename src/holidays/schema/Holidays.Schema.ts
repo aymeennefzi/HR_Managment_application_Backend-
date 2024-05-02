@@ -5,14 +5,18 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class Holiday extends Document {
-  @Prop({ required: true })
+  @Prop()
   name: string;
 
-  @Prop({ required: true })
-  date: Date;
+  @Prop()
+  date: string;
 
   @Prop()
   description: string;
+
+  @Prop()
+  numberOfDays: number ;
+
 }
 
 export const HolidaySchema = SchemaFactory.createForClass(Holiday);

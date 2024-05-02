@@ -69,5 +69,80 @@ export class ProjectService {
         }
         return projects;
     }
+    async getNewProjectsThisMonth(): Promise<number> {
+      // Récupérer la date du premier jour du mois en cours
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      
+      // Récupérer la date du dernier jour du mois en cours
+      const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  
+      // Récupérer tous les nouveaux projets créés ce mois-ci
+      const newProjects = await this.projectModel.find({
+        createdAt: {
+          $gte: firstDayOfMonth,
+          $lte: lastDayOfMonth,
+        },
+      }).exec();
+  
+      // Retourner le nombre de nouveaux projets ce mois-ci
+      return newProjects.length;
+    }
+
+
+    async getFinishedProjectsThisMonth(): Promise<number> {
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  
+      return await this.projectModel.countDocuments({
+        statut: TypeStatutProjet.FINISHED,
+        FinishDate: {
+          $gte: firstDayOfMonth,
+          $lte: lastDayOfMonth
+        }
+      });
+    }
+
+
+    async getProjectsForCurrentMonth(): Promise<{ name: string, progress: TypeStatutProjet, duration: number }[]> {
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  
+      const projects = await this.projectModel.find({
+        StartDate: { $lte: lastDayOfMonth },
+        FinishDate: { $gte: firstDayOfMonth }
+      }).select('NomProject statut StartDate FinishDate');
+  
+      return projects.map(project => ({
+        name: project.NomProject,
+        progress: project.progress,
+        duration: (new Date(project.FinishDate).getTime() - new Date(project.StartDate).getTime()) / (1000 * 3600 * 24)
+      }));
+    }
+
+
+    async getProjectsCountByStatus(): Promise<{ [key in TypeStatutProjet]: number }> {
+      const projectCounts = await this.projectModel.aggregate([
+        {
+          $group: {
+            _id: '$statut',
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+  
+      const projectCountMap: { [key in TypeStatutProjet]: number } = {
+        [TypeStatutProjet.New]: 0,
+        [TypeStatutProjet.RUNNING]: 0,
+        [TypeStatutProjet.FINISHED]: 0,
+      };
+  
+      projectCounts.forEach((item: any) => {
+        projectCountMap[item._id] = item.count;
+      });
+  
+      return projectCountMap;
+    }
+
+
     
 }
