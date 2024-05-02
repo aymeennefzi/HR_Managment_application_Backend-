@@ -205,20 +205,9 @@ async isUserAvailableForMission(employeeId: string, date: string): Promise<boole
   }
   return missionCount===0
 
-}
-async getmissionsbyclient(token: string): Promise<Mission[]> {
-  const id_client= await this.UserService.getIdfromToken(token);
-  console.log(id_client);
-  const missions = await this.missionModel
-    .find({ client: id_client })
-    .exec();
 
-  if (!missions || missions.length === 0) {
-    throw new NotFoundException('Aucune mission trouvée pour cet client employé');
-  }
-
-  return missions;
 }
+
 startCronJobForEmployees() {
   const job = new CronJob('0 0 * * *', async () => {
     await this.unassignEmployeesFromCancelledOrCompletedMissions();
@@ -238,4 +227,22 @@ async unassignEmployeesFromCancelledOrCompletedMissions() {
   }}
 
 
+
+async getmissionsbyclient(token: string): Promise<Mission[]> {
+  const id_client= await this.UserService.getIdfromToken(token);
+  console.log(id_client);
+  const missions = await this.missionModel
+    .find({ client: id_client })
+    .exec();
+
+  if (!missions || missions.length === 0) {
+    throw new NotFoundException('Aucune mission trouvée pour cet client employé');
+  }
+
+  return missions;
 }
+
+
+
+}
+

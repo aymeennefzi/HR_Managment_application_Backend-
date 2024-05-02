@@ -246,6 +246,7 @@ async activateUser(userId: string): Promise<User> {
       const user = await this.userMosel.findOne({ _id:decodedToken.id })
       return user;
     }
+
     async getIdfromToken(token:string):Promise<String>{
       const decodedToken:any =jwt.verify(token,'bahazaidi') ;
       let id = decodedToken.id;
