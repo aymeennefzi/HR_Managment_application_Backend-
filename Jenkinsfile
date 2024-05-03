@@ -51,20 +51,20 @@ pipeline {
             }
         }
         
-        stage('Dépôt sur Nexus') {
-    steps {
-        script {
-            dir('HR_Managment_application_Backend-') {
-                // Setup the .npmrc file using environment variable for auth
-                sh 'echo "registry=http://172.16.1.70:8081/repository/npmHosted/" > .npmrc'
-                sh 'echo "//172.16.1.70:8081/repository/npmHosted/:_authToken=${NEXUS_TOKEN}" >> .npmrc'
+//         stage('Dépôt sur Nexus') {
+//     steps {
+//         script {
+//             dir('HR_Managment_application_Backend-') {
+//                 // Setup the .npmrc file using environment variable for auth
+//                 sh 'echo "registry=http://172.16.1.70:8081/repository/npmHosted/" > .npmrc'
+//                 sh 'echo "//172.16.1.70:8081/repository/npmHosted/:_authToken=${NEXUS_TOKEN}" >> .npmrc'
                 
-                // Publish package to Nexus npm repository
-                sh 'npm publish'
-            }
-        }
-    }
-}
+//                 // Publish package to Nexus npm repository
+//                 sh 'npm publish'
+//             }
+//         }
+//     }
+// }
 
         
         stage('Remove Previous Containers') {
