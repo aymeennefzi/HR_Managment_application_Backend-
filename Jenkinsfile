@@ -60,7 +60,7 @@ pipeline {
                         sh 'echo //172.16.1.70/:8081/repository/npmHosted/:_authToken=${NEXUS_TOKEN} >> .npmrc'
                         
                         // Publish package to Nexus npm repository
-                        sh 'npm publish --registry=http://172.16.1.70/:8081/repository/npmHosted/'
+                        sh 'npm publish --registry=http://172.16.1.70:8081/repository/npmHosted/'
                     }
                 }
             }
