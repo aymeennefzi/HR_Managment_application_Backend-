@@ -2,7 +2,6 @@ import {
     BadRequestException,
     HttpException,
     Injectable,
-    InternalServerErrorException,
     NotFoundException,
     UnauthorizedException
 } from '@nestjs/common';
@@ -146,15 +145,15 @@ async activateUser(userId: string): Promise<User> {
     return user;
   }
 
-  async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
-    const updatedUser = await this.userMosel.findByIdAndUpdate(
-      userId,
-      updateDto,
-      { new: true },
-    );
+  // async updateUser(userId: string, updateDto: UpdateProfileDto): Promise<User> {
+  //   const updatedUser = await this.userMosel.findByIdAndUpdate(
+  //     userId,
+  //     updateDto,
+  //     { new: true },
+  //   );
 
-    return updatedUser;
-  }
+  //   return updatedUser;
+  // }
   async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto): Promise<void> {
     const { oldPassword, newPassword } = updatePasswordDto;
     const user = await this.userMosel.findById(userId);
@@ -241,11 +240,12 @@ async activateUser(userId: string): Promise<User> {
         }
         return user;
     }  
-    async getUserByToken(token:string):Promise<User>{
+  async getUserByToken(token:string):Promise<User>{
       const decodedToken:any =jwt.verify(token,'bahazaidi') ;
       const user = await this.userMosel.findOne({ _id:decodedToken.id })
       return user;
     }
+  
 
     async getIdfromToken(token:string):Promise<String>{
       const decodedToken:any =jwt.verify(token,'bahazaidi') ;
@@ -292,6 +292,28 @@ async activateUser(userId: string): Promise<User> {
 
       return newEmployeesThisMonth.length;
     }
+    async updateUser1(userId: string, updateDto: UpdateProfileDto): Promise<User> {
+      const updatedUser = await this.userMosel.findByIdAndUpdate(
+        userId,
+        updateDto,
+        { new: true },
+      );
+  
+      return updatedUser;
+    }
+    async updateUser(userId: string, updateDto: UpdateProfileDto, filename: string): Promise<User> {
+      updateDto.image=filename;
+      console.log(updateDto.image);
+      const updatedUser = await this.userMosel.findByIdAndUpdate(
+        userId,
+        updateDto,
+  
+        { new: true },
+      );
+  
+      return updatedUser;
+    
+  }
 
 }
 

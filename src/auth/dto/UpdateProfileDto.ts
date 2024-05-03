@@ -1,4 +1,3 @@
-// update-profile.dto.ts
 import { IsString, IsEmail, IsOptional } from 'class-validator';
 
 export class UpdateProfileDto {
@@ -61,4 +60,6 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   datebirth : string ;
+  @IsOptional()
+  image:string;
 }

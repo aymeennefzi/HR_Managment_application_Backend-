@@ -71,10 +71,10 @@ export class AuthController {
     res.clearCookie('user_token');
   }
 
-  @Patch('updateProfile/:id')
-  async updateUser(@Param('id') userId: string, @Body() updateDto: UpdateProfileDto): Promise<User> {
-    return this.authservice.updateUser(userId, updateDto);
-  }
+  // @Patch('updateProfile/:id')
+  // async updateUser(@Param('id') userId: string, @Body() updateDto: UpdateProfileDto): Promise<User> {
+  //   return this.authservice.updateUser(userId, updateDto);
+  // }
   @Patch('/update-password')
   @UseGuards(AuthGuard())
   async updatePassword(@Req() req: Request, @Body() updatePasswordDto: UpdatePasswordDto): Promise<void> {
@@ -108,24 +108,12 @@ export class AuthController {
   async getuserbyid(): Promise<User[]>{
     return await this.authservice.getusers1();
   }
-  
 
 
 @Get('pictures/:filename') 
 async getPicture(@Param ('filename') filename , @Res() res){
   res.sendFile(filename , {root : './uploads'});
 }
-// @Post('att/:personnelId')
-//   async updateAttendanceList(
-//     @Param('personnelId') personnelId: string,
-//     @Body() attend: UpdateAttendanceDto[],
-//   ): Promise<void> {
-//     try {
-//       await this.authservice.updateAttendanceList(personnelId, attend);
-//     } catch (error) {
-//       throw new NotFoundException("Impossible de mettre à jour la liste de présence.");
-//     }
-//   }
 
 @Post('uploadImage/:userId')
 @UseInterceptors(FileInterceptor('file', {
@@ -180,24 +168,31 @@ async findByEmail(@Param('email') email: string) {
     throw new NotFoundException(error.message);
   }
 }
-@Get('userbytoken')
-  @UseGuards(AuthGuard())
-  async getUserByToken(@Req() request: Request): Promise<User> {
-    const token = request.headers['authorization'].split(' ')[1];
-    const user = await this.authservice.getUserByToken(token);
-    return user;
-  }
+
   @Get('Costumer/NewClient') // Changement du chemin pour éviter les conflits
     async getNewCustomersThisMonth(): Promise<{ newCustomers: number }> {
         const newCustomers = await this.authservice.getNewCustomersThisMonth();
         return { newCustomers };
     }
 
-
+    @Get('userbytoken/:token') // Définir le paramètre token dans l'URL
+  async getUserByToken(@Param('token') token: string): Promise<User> {
+    const user = await this.authservice.getUserByToken(token);
+    return user;
+  } 
+    
 
     @Get('Employee/NewEmloyee') // Changement du chemin pour éviter les conflits
     async getNewEmplosThisMonth(): Promise<{ newEmployees: number }> {
         const newEmployees = await this.authservice.getNewEmployyesThisMonth();
         return { newEmployees };
     }
+    @Patch('updateProfile/:id')
+
+async updateUser(@Param('id') userId: string, @Body() updateDto: UpdateProfileDto): Promise<User> {
+     let updatedUser: User;
+      updatedUser = await this.authservice.updateUser1(userId, updateDto);
+    return updatedUser;
+}
+
 }
