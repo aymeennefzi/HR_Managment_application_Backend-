@@ -18,7 +18,7 @@ pipeline {
             steps {
                 dir('HR_Managment_application_Backend-') {
                     echo 'Pulling backend repository...'
-                    git branch: 'main', url: 'https://github.com/aymeennefzi/HR_Managment_application_Backend-.git'
+                    git branch: 'master', url: 'https://github.com/aymeennefzi/HR_Managment_application_Backend-.git'
                 }
             }
             post {
