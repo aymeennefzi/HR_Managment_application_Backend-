@@ -3,7 +3,6 @@ import { JobService } from './job.service';
 import { JobController } from './job.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Job, JobSchema } from '../schemas/job.schema';
-import { ApplicationModule } from '../application/application.module';
 import { Application, ApplicationSchema } from '../schemas/application.schema';
 
 @Module({
